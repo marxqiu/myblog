@@ -4,5 +4,5 @@ title: Home
 
 {{<figure src="/media/photo.jpeg" title="Me in Chicago in 2024 (Credit goes to ZC)" width="450">}}
 
-Novice with big questions. Writing only about what captivates. Consider this blog my notebook.
+Writing only about what captivates. Consider this blog my notebook.
 
