@@ -1,0 +1,311 @@
+<script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><a name="top"></a>
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>裘渝琛：Yuchen Qiu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/github.min.css" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/r.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.17.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@4.17.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.12.2"></script>
+
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+            <link rel="icon" href="http://localhost:1313/media/hugo-logo.png">
+
+
+
+
+
+  </head>
+  
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav" >
+      <a href="/" class="nav-logo">
+        <img src="/media/hugo-logo.png"
+         width="50"
+         height="50"
+         alt="Hugo-ht">
+      </a>
+
+      <ul class="nav-links" >
+        
+        
+           <li><a href="/">Home</a></li>
+       
+           <li><a href="/en/posts/">Posts</a></li>
+       
+           <li><a href="/cn/posts/">中文</a></li>
+       
+       
+      </ul>
+</nav>
+      </header>
+
+<main class = "content" role="main">
+<div style="text-align: center">
+
+<h1>A Framework for the Mind</h1>
+
+<p>Yuchen Qiu 
+ / 2024-11-03 </p>
+
+<hr/>
+</div>
+
+<span class="article-toolbar">
+  
+  
+  
+  
+  
+  
+  
+  <a href='https://github.com/marxqiu/myblog/edit/main/content/en/posts/a-framework-for-the-mind.md'style="font-size: 24px; color: black;" target="_blank"><i class="fa fa-edit" aria-hidden="true" title="Suggest an edit of this page"></i>
+  </a>
+  
+  
+  
+</span>
+
+
+
+<div class="body-text list-text">
+<p>Disclaimer: This post is not for you if you disagree with the following statement:</p>
+<blockquote>
+<p>Human brain is simply the greatest intellectual quest of all time.</p>
+</blockquote>
+<h1 id="introduction">Introduction<a href="#introduction" class="header-anchor" ariaLabel="Anchor"> # </a></h1>
+<p>Before setting out on this quest, let&rsquo;s pause to consider our end goal and direction. How do we understand the brain, and what makes for a good explanation?</p>
+<p>The answer that often comes to mind might sound like this:</p>
+<blockquote>
+<p>&hellip;so surely the answer to how this thing works is going to have to be at the level of neurons and synapses, right? Neurons and synapses, this thing binds to that thing, changes the shape of a protein, opens the channel, molecules move out — stuff happens. That&rsquo;s a causal mechanism, right? I can visualize it. We can make an animation and see these almost like physical causality of these bits.</p>
+</blockquote>
+<p>This explanation dives into molecular and cellular mechanisms and provides a perfect causal linkage that&rsquo;s absolutely scientific and materialistic. And it works. For example, depression involves reduced serotonin at synapses, which led directly to the development of SSRI medications like Prozac, which blocks serotonin pumps to keep more serotonin available. It&rsquo;s indeed tempting.</p>
+<p>But is this the best explanation we can get? Does it have weaknesses? Are there alternatives?</p>
+<p>When you start to think about these questions, you&rsquo;ll soon find yourself in a mire. This explanation misses the big &ldquo;why&rdquo;: why are these mechanisms designed this way, and how do they contribute to overall function? From an evolutionary perspective, we as organisms have one sole goal: to survive. Thus we need to understand how the nervous system serves survival advantage.</p>
+<p>Second, there are emergent properties. Complex cognitive functions like consciousness and creativity might not be fully explained by just looking at neurons and synapses. Consider the unpredictability of weather as an everyday analogy. We can measure all the individual elements — temperature, pressure, humidity, wind speed, and so on. Each is dictated by physical laws. Yet despite understanding these basic elements, precise long-term prediction remains unachievable. This is not unexpected.</p>
+<p>Reductionism has a long history in science — the belief that complex systems can be fully understood by breaking them down into their smallest components. In principle, everything could be explained by physics at the most fundamental level. The success of physics in explaining the physical world with fundamental laws of particles and forces partly encourages a similar approach in neuroscience. But at least for now, there are no fundamental laws of the brain. Maybe we are still waiting for the Newton of neuroscience. Or perhaps the biological brain is simply too complex to be fully understood through reductionism — a harder problem than cosmology. (To the &ldquo;heretic&rdquo; who reaches this point: it&rsquo;s okay to be apostate.)</p>
+<p>I hope I have shown you some limitations of classical reductionism. Enter David Marr:</p>
+<blockquote>
+<p>Almost never can a complex system of any kind be understood as a simple extrapolation from the properties of its elementary components. (Marr, 1982)</p>
+</blockquote>
+<p>David argues that to understand a complex system like the brain, one must be prepared to contemplate different kinds of explanations at different levels of description that are linked, at least in principle, into a cohesive whole, even if linking the levels in complete detail is impractical. Understanding a higher level purely through lower-level mechanisms is often impractical, if not impossible. It&rsquo;s like trying to understand bird flight by studying only feathers. This is why Marr&rsquo;s approach was revolutionary — it acknowledged the limitations of any single explanation and invited complementary multi-level analysis to understand the system.</p>
+<h1 id="the-three-levels">The Three Levels<a href="#the-three-levels" class="header-anchor" ariaLabel="Anchor"> # </a></h1>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align:left">Computational theory</th>
+<th>Representation and algorithm</th>
+<th>Hardware implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>David</td>
+<td style="text-align:left">What is the goal of the computation, why is it appropriate, and what is the logic of the strategy by which it can be carried out?</td>
+<td>How can this computation be implemented? In particular, what is the representation for the input and output, and what is the algorithm for the transformation?</td>
+<td>How can the representation and algorithm be realized physically?</td>
+</tr>
+<tr>
+<td>Nancy</td>
+<td style="text-align:left">What information is extracted and why, what is the input, what is the output and can the output be straightforwardly inferred from the input? Is this inference ill-posed? What extra knwoledge/assumptions can make the problem tractable? What regularities in the world constrain the inference?</td>
+<td>How does the system do what it does? i.e. can we write the code to do this? What are the computation representations? How would we find out?</td>
+<td>How is the system physically realized in neurons &amp; brains</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-first-level-computational-theory">The First Level: Computational Theory<a href="#the-first-level-computational-theory" class="header-anchor" ariaLabel="Anchor"> # </a></h2>
+<p>Starting from the top and arguably the most important level is computational theory. As Marr states:</p>
+<blockquote>
+<p>The nature of the computations that underlie perception depends more upon the computational problems that have to be solved than upon the particular hardware in which their solutions are implemented. (Marr, 1982)</p>
+</blockquote>
+<p>To appreciate the importance of theory, consider the history of flight. Early attempts involved directly mimicking bird wing movements, but they failed. The breakthrough came only after the Wright Brothers systematically studied aerodynamics using wind tunnels and understood the theoretical problem of three-axis control. To understand flight itself, we must understand why feathers and wings have their specific forms rather than just studying their elementary properties.</p>
+<p><img src="https://s26162.pcdn.co/wp-content/uploads/2024/04/Picture1-3.png" alt="lithub.com"></p>
+<p>The power of theory lies in its identification of constraints that must be satisfied and demonstration of how these constraints necessitate certain solutions. In the example of flight, feathers and wings have their current form not by chance or arbitrary design, but because certain properties must exist to achieve lift. Theory also provides implementation-independent principles: aerodynamic principles apply whether the wing is made of feathers or metal, or whether the wing moves horizontally. Satisfying the constraints described by theory is sufficient to generate lift. The world isn&rsquo;t random beyond comprehension — it has structure, and that structure imposes constraints. Good theories capture fundamental regularities and give us genuine explanatory power.</p>
+<p>Now, assuming cognition is ultimately information processing, let&rsquo;s examine the computational theory such systems must satisfy. Consider a familiar example: the cash register. We need to understand at the computational level what the device does and why it behaves as it does. It&rsquo;s performing arithmetic, specifically addition. Computational analysis starts with the input to the system and the output from the system. A cash register maps two numbers into single numbers while satisfying:</p>
+<ul>
+<li>Commutativity $(A+B=B+A)$</li>
+<li>Associativity $((A+B)+C=A+(B+C))$</li>
+<li>Identity $(A+0=A)$</li>
+<li>Inverse $(A+(-A)=0)$</li>
+</ul>
+<p>These operations meet constraints we intuitively expect when buying something — for example, the order in which goods are presented to the cashier should not affect the total (commutativity). The constraints capture essential properties of what we want the cash register to do while excluding inappropriate computations. For instance, a cash register shouldn&rsquo;t perform string concatenation because it&rsquo;s non-commutative $(A + B = AB != BA = B + A)$.</p>
+<p>To summarize, this level asks what problem the system is trying to solve and what constraints it must satisfy. As the saying goes, sometimes you need to step back to see the wood for the trees. As Marr explains:</p>
+<blockquote>
+<p>In the theory of visual processes, the underlying task is to reliably derive properties of the world from images of it; the business of isolating constraints that are both powerful enough to allow a process to be defined and generally true of the world is a central theme of our inquiry. (Marr, 1982)</p>
+</blockquote>
+<h2 id="the-second-level-representation-and-algorithm">The Second Level: Representation and Algorithm<a href="#the-second-level-representation-and-algorithm" class="header-anchor" ariaLabel="Anchor"> # </a></h2>
+<p>The second level of analysis centers on one important concept: representation.</p>
+<p>A famous example illustrating representation is the mutilated-checkerboard problem (Kaplan &amp; Simon, 1990). Consider a checkerboard where two diagonally opposite corner squares have been removed, leaving 62 squares. Now suppose we have 31 dominoes, each able to cover exactly two squares. Can we arrange these dominoes to cover all 62 squares? (Take a moment to ponder this before reading on.)</p>
+<p><img src="https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/af2275d3-e176-5f63-bc28-7f8cd11f005e/006f3643-53b6-54f3-b71a-f22a6b2df620.jpg" alt="puzzlewocky.com"></p>
+<p>The answer is no.</p>
+<p>To understand why, let&rsquo;s first consider a simpler &ldquo;marriage&rdquo; problem:</p>
+<blockquote>
+<p>A village matchmaker has 32 eligible men and 32 eligible women to pair up for marriages. However, two women leave the village. Can everyone remaining be paired up?</p>
+</blockquote>
+<p>The answer is obviously no — there aren&rsquo;t enough women to pair with the men. This insight helps us solve the checkerboard puzzle: since each domino must cover one black and one white square (matching), and we have only 30 white squares but 32 black squares, it&rsquo;s impossible to cover the board completely.</p>
+<p>These problems are essentially identical. The key difference? The marriage problem makes the pairing requirement explicit, while the checkerboard&rsquo;s spatial representation pushes this crucial detail into the background.</p>
+<p>As Marr explains:</p>
+<blockquote>
+<p>A representation is a formal system for making explicit certain entities or types of information, together with a specification of how the system does this.</p>
+<p>To say that something is a formal scheme means only that it is a set of symbols with rules for putting them together — no more and no less.  (Marr, 1982)</p>
+</blockquote>
+<p>The musical score represents a symphony. Arabic numerals (0-9) represent numbers, as do Roman and binary numerals. Each representation captures some aspects of reality through symbols, but not all. Each has its limitations based on how we can manipulate the information. Consider Arabic numerals: they make powers of 10 obvious (10, 100, 1000&hellip;) but obscure powers of 2 (2, 4, 8&hellip;). They facilitate multiplication, unlike Roman numerals which lack a place value system.</p>
+<p>Key points about representation:</p>
+<ul>
+<li>The representation of &ldquo;reality&rdquo; is not unique</li>
+<li>Different representation make different information explicit</li>
+<li>The choice of representation can make subsequent operations either easy or hard</li>
+</ul>
+<p>After choosing an appropriate representation, we must specify an algorithm for transformation. With addition, we follow rules about adding least significant digits first and &ldquo;carrying&rdquo; when the sum exceeds 9. Note that algorithm choice depends mainly on the representation, and multiple algorithms can work with the same representation. Consider determining whether a number is even. Using an array representation $(5 := [1, 1, 1, 1, 1])$, we can implement two different approaches:</p>
+<div class="highlight"><pre tabindex="0" style=";-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#408080;font-style:italic"># Algorithm 1: Count elements</span>
+</span></span><span style="display:flex;"><span><span style="color:#008000;font-weight:bold">def</span> <span style="color:#00f">is_even_array_1</span>(arr):
+</span></span><span style="display:flex;"><span>    <span style="color:#008000;font-weight:bold">return</span> <span style="color:#008000">len</span>(arr) <span style="color:#666">%</span> <span style="color:#666">2</span> <span style="color:#666">==</span> <span style="color:#666">0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#408080;font-style:italic"># Algorithm 2: Pair elements</span>
+</span></span><span style="display:flex;"><span><span style="color:#008000;font-weight:bold">def</span> <span style="color:#00f">is_even_array_2</span>(arr):
+</span></span><span style="display:flex;"><span>    <span style="color:#008000;font-weight:bold">while</span> <span style="color:#008000">len</span>(arr) <span style="color:#666">&gt;</span> <span style="color:#666">0</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#008000;font-weight:bold">try</span>:
+</span></span><span style="display:flex;"><span>            arr<span style="color:#666">.</span>pop()
+</span></span><span style="display:flex;"><span>            arr<span style="color:#666">.</span>pop()
+</span></span><span style="display:flex;"><span>        <span style="color:#008000;font-weight:bold">except</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#008000;font-weight:bold">return</span> <span style="color:#008000;font-weight:bold">False</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#008000;font-weight:bold">return</span> <span style="color:#008000;font-weight:bold">True</span>
+</span></span></code></pre></div><p>The choice of algorithm depends largely on desired characteristics (like time versus space complexity) and the hardware implementation constraints.</p>
+<h2 id="the-third-level-implementation">The Third Level: Implementation<a href="#the-third-level-implementation" class="header-anchor" ariaLabel="Anchor"> # </a></h2>
+<p>The implementation level received less emphasis from David Marr, likely due to his focus on understanding computational problems. He argued that understanding comes more readily from grasping the nature of the problem than from examining mechanisms. This represents a crucial shift away from the more empirically accessible observations in biological hardware.</p>
+<p>However, Marr did note that the same algorithm can be implemented through different technologies. A child and a cash register may use identical algorithms to add numbers, though their physical implementations differ radically. Moreover, certain algorithms naturally suit certain physical structures better than others.</p>
+<h2 id="discussion-the-interplay-of-levels">Discussion: The Interplay of Levels<a href="#discussion-the-interplay-of-levels" class="header-anchor" ariaLabel="Anchor"> # </a></h2>
+<p><img src="/media/three-levels.svg" alt="three levels"></p>
+<p>To recap, Marr&rsquo;s framework consists of three levels:</p>
+<ol>
+<li>The top level is abstract computational theory, characterized as a mapping from input to output, defined precisely by showing the sufficiency and necessity of constraints</li>
+<li>The middle level involves choosing representations for input and output, plus algorithms for transformation</li>
+<li>At the other extreme lies the physical implementation — how algorithms and representations are realized in hardware</li>
+</ol>
+<p>What about the relationship between these levels? As Marr explains:</p>
+<blockquote>
+<p>These three levels are coupled, but only loosely&hellip; of course they are logically and causally related. (Marr, 1982)</p>
+</blockquote>
+<p>While complete understanding requires mastery of all three levels, their relative independence means certain phenomena must be explained at specific levels. Consider afterimages (like what you see after staring at a light bulb) — these require explanation primarily at the physical level of vision mechanisms. Being clear about which level suits which subdomain is critical.</p>
+<p>For example:</p>
+<ul>
+<li>Neuroanatomy ties principally to the implementation level</li>
+<li>Neurophysiology also relates primarily to implementation, but requires extreme caution when making inferences about representation — we must first understand what information is being represented</li>
+</ul>
+<h1 id="conclusion">Conclusion<a href="#conclusion" class="header-anchor" ariaLabel="Anchor"> # </a></h1>
+<p>Let me open with a telling anecdote from Gershman (2021):</p>
+<blockquote>
+<p>I once had a conversation with a neuroscientist that went roughly as follows. He told me that we didn’t need psychology to understand the brain; all we had to do was measure what’s going on in the brain, and from those measurements we could derive everything we wanted to know about cognition. I think this point of view is common among neuroscientists, who yearn to free themselves from antiquated notions of mental representations once brain measurement and analysis technology become sufficiently advanced. This, I argue, is a pipe dream born from a naive belief in the innocent eye.</p>
+</blockquote>
+<p>This exchange captures a persistent misconception in neuroscience — that understanding the brain will come solely from observation and measurement. But discovery demands more than looking; it requires thinking. Marr has provided us with a sketch map for approaching the brain from a higher level. While this framework may be incomplete or even flawed in some aspects, it gives us a starting point for organizing our thoughts about this most complex of organs.</p>
+<h1 id="open-questions">Open Questions<a href="#open-questions" class="header-anchor" ariaLabel="Anchor"> # </a></h1>
+<ul>
+<li>Can theory lead practice? The success of deep learning seems to challenge Marr&rsquo;s theory-first approach.</li>
+<li>Does implementation independence hold for intelligence? Would Marr view uploaded minds differently?</li>
+<li>Is the brain really doing information processing? Or are we, like Marr in the age of computers, just seeing the brain through the lens of our era&rsquo;s dominant technology?</li>
+</ul>
+<h1 id="further-reading">Further Reading<a href="#further-reading" class="header-anchor" ariaLabel="Anchor"> # </a></h1>
+<h2 id="main-source">Main Source<a href="#main-source" class="header-anchor" ariaLabel="Anchor"> # </a></h2>
+<p>Marr, David. <em>Vision: A Computational Investigation into the Human Representation and Processing of Visual Information</em>. San Francisco: W.H. Freeman, 1982.</p>
+<h2 id="for-a-wider-perspective-on-depression">For a Wider Perspective on Depression<a href="#for-a-wider-perspective-on-depression" class="header-anchor" ariaLabel="Anchor"> # </a></h2>
+<p>Sapolsky, Robert. &ldquo;The Biology and Psychology of Depression.&rdquo; Stanford University lecture, 2018. https://youtu.be/fzUXcBTQXKM</p>
+<h2 id="for-clear-introductions-to-marrs-framework">For Clear Introductions to Marr&rsquo;s Framework<a href="#for-clear-introductions-to-marrs-framework" class="header-anchor" ariaLabel="Anchor"> # </a></h2>
+<p>Kanwisher, Nancy. &ldquo;How can we study the human mind and brain: Marr&rsquo;s levels of analysis.&rdquo; MIT Department of Brain and Cognitive Sciences, 2018. https://youtu.be/Di_3pGAveGs</p>
+<p>&ldquo;Marr&rsquo;s three levels of inquiry.&rdquo; Course materials, Computational Neuroscience, College of William &amp; Mary. https://apsc450computationalneuroscience.wordpress.com/marrs-three-levels-of-inquiry/</p>
+<h2 id="for-understanding-formal-systems">For Understanding Formal Systems<a href="#for-understanding-formal-systems" class="header-anchor" ariaLabel="Anchor"> # </a></h2>
+<p>Hofstadter, Douglas R. &ldquo;The MU-puzzle.&rdquo; In <em>Gödel, Escher, Bach: An Eternal Golden Braid</em>, 33-66. New York: Basic Books, 1979.</p>
+<h2 id="for-critical-perspectives">For Critical Perspectives<a href="#for-critical-perspectives" class="header-anchor" ariaLabel="Anchor"> # </a></h2>
+<p>Gershman, Samuel J. &ldquo;Just Looking: The Innocent Eye in Neuroscience.&rdquo; <em>Neuron</em> 109, no. 14 (2021): 2220-2223. https://doi.org/10.1016/j.neuron.2021.05.022</p>
+<p>Burge, Tyler. &ldquo;Marr&rsquo;s Theory of Vision.&rdquo; In <em>Modularity in Knowledge Representation and Natural-Language Understanding</em>, edited by Jay L. Garfield, 135-153. Cambridge: MIT Press, 1987.</p>
+<p>Harpaz, Yehouda. &ldquo;Critique of Vision by Marr.&rdquo; Human Brain Project, September 26, 1996. https://human-brain.org/vision.html</p>
+<p>McClamrock, Ron. &ldquo;Marr&rsquo;s Three Levels: A Re-evaluation.&rdquo; <em>Minds and Machines</em> 1, no. 2 (1991): 185-196. https://doi.org/10.1007/BF00361036</p>
+
+
+<p style="color:#777;">Last modified on 2024-11-03</p>
+</div>
+<a href="#top"><i class="fa fa-chevron-up" style="font-size: 30px; color: black;"></i></a>
+
+</main>
+
+<footer class="footer">
+  <div class="content">
+
+<script src="https://giscus.app/client.js"
+        data-repo="hongtaoh/mywebsite"
+        data-repo-id="R_kgDOLwIVBA"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOLwIVBM4CeyR1"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+</br>
+ 
+</div>
+  <script type="text/javascript" src="/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/center-img.js"></script>
+
+
+
+     <ul class="footer-links">
+      
+       
+       
+       
+       <li><a href="/en/posts/index.xml" type="application/rss+xml" title="RSS feed">
+       Subscribe </a>
+       </li>
+       
+       
+       <li>
+       
+        <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">
+       
+        License
+        <i class="fa fa-cc" aria-hidden="true" title="Attribution-NonCommercial-ShareAlike 4.0 International"></i> 
+        </a>
+       </li>
+       
+     </ul>
+     <div class="copyright-text">
+            
+            ©
+            
+            Yuchen Qiu
+            
+            2024-
+            
+     </div>
+
+</footer>
+
+
+
+
+

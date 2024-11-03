@@ -1,6 +1,6 @@
 baseURL = "https://example.com/"
 languageCode = "en-us"
-title = "Hugo-HT"
+title = "裘渝琛：Yuchen Qiu"
 theme = "hugo-ht"
 footnotereturnlinkcontents = "↩"
 enableRobotsTXT = true
@@ -16,10 +16,6 @@ posts = "/posts/:year/:month/:day/:slug/"
     url = "/"
     weight = 1
 [[menu.en]]
-    name = "About"
-    url = "/en/about/"
-    weight = 2
-[[menu.en]]
     name = "Posts"
     url = "/en/posts/"
     weight = 3
@@ -27,10 +23,6 @@ posts = "/posts/:year/:month/:day/:slug/"
     name = "中文"
     url = "/cn/posts/"
     weight = 4
-[[menu.cn]]
-    name = "关于"
-    url = "/cn/about/"
-    weight = 1
 [[menu.cn]]
     name = "日志"
     url = "/cn/posts/"
@@ -53,7 +45,7 @@ posts = "/posts/:year/:month/:day/:slug/"
     # Edit by yourself:
     GithubEdit = "https://github.com/marxqiu/myblog/edit/main/content/"
     copyright = "&copy;"
-    copyrightYear = "2020-2021"
+    copyrightYear = "2024-"
     # Edit by yourself:
     GithubRepo = "https://github.com/marxqiu/myblog"
     # Edit by yourself:

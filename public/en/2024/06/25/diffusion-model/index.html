@@ -1,0 +1,213 @@
+<script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><a name="top"></a>
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>裘渝琛：Yuchen Qiu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/github.min.css" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/r.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.17.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@4.17.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.12.2"></script>
+
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+            <link rel="icon" href="http://localhost:1313/media/hugo-logo.png">
+
+
+
+
+
+  </head>
+  
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav" >
+      <a href="/" class="nav-logo">
+        <img src="/media/hugo-logo.png"
+         width="50"
+         height="50"
+         alt="Hugo-ht">
+      </a>
+
+      <ul class="nav-links" >
+        
+        
+           <li><a href="/">Home</a></li>
+       
+           <li><a href="/en/posts/">Posts</a></li>
+       
+           <li><a href="/cn/posts/">中文</a></li>
+       
+       
+      </ul>
+</nav>
+      </header>
+
+<main class = "content" role="main">
+<div style="text-align: center">
+
+<h1>Diffusion Model</h1>
+
+<p>Yuchen Qiu 
+ / 2024-06-25 </p>
+
+<hr/>
+</div>
+
+<span class="article-toolbar">
+  
+  
+  
+  
+  
+  
+  
+  <a href='https://github.com/marxqiu/myblog/edit/main/content/en/posts/2024-06-25-Diffusion-Model.md'style="font-size: 24px; color: black;" target="_blank"><i class="fa fa-edit" aria-hidden="true" title="Suggest an edit of this page"></i>
+  </a>
+  
+  
+  
+</span>
+
+
+
+<div class="body-text list-text">
+<h1 id="diffusion-model">Diffusion Model<a href="#diffusion-model" class="header-anchor" ariaLabel="Anchor"> # </a></h1>
+<p>What we want to do is knowing the &ldquo;distribution of image&rdquo; <code>$q(x_{0})$</code> and being able to sample new images from it.</p>
+<p><img src="/media/diffusion_model.png" alt="">
+We have a diffusion process of generating sample noise from the real world picture. Generating pictures is the reverse diffusion process of removing noise.</p>
+<p>The forward diffusion process (from real distribution to Gaussian distribution) is
+<code>$$ \begin{align} q(x_{t+1}|x_{t})  &amp; = \mathcal{N}(\sqrt{ 1-\beta_{t} }x_{t}, \beta_{t}I) \\ x_{t+1}  &amp; = \sqrt{ 1-\beta_{t} }x_{t} + \sqrt{ \beta_{t} }\epsilon, \text{where  } \epsilon \sim \mathcal{N}(0, 1) \end{align} $$</code>
+Note that this process has Markov property since <code>$x_{t+1}$</code> only depends on <code>$x_{t}$</code> and each step we &ldquo;dim&rdquo; the original image <code>$\sqrt{ 1-\beta_{t} }x_{t}$</code> and add Gaussian noise <code>$\sqrt{ \beta_{t} }\epsilon$</code>. <code>$\beta_{1}, \dots, \beta_{T}$</code> are variances between 0 and 1 and usually in an increasing order.</p>
+<p>The scaling of mean helps to keep <code>$\text{Var}(x_{t+1})$</code> from drifting and make it approach <code>$1$</code> as <code>$t$</code> increases
+<code>$$ \begin{align} \text{Var}(x_{t+1})  &amp; = \mathbb{E}[\text{Var}(x_{t+1}|x_{t})] + \text{Var}[\mathbb{E}[x_{t+1}|x_{t}= ) \\ &amp;= \mathbb{E}[\beta_{t}] + \text{Var}[\sqrt{ 1-\beta_{t} }x_{t}] \\ &amp; = \beta_{t} \cdot 1+ (1-\beta_{t})\text{Var}[x_t] \end{align} $$</code></p>
+<p>The reverse diffusion process is
+<code>$$ \begin{align} q(x_{t-1}|x_{t}) = \frac{q(x_{t}|x_{t-1})q(x_{t-1})}{q(x_{t})} \end{align} $$</code>
+However, the marginal distribution is intractable since it involves <code>$q(x_{0})$</code>
+<code>$$ q(x_{t}) = \int q(x_{0})\prod_{i=1}^{t}q(x_{i}|x_{i-1}) \, d\mathbf{x}  $$</code>
+which is the &ldquo;real-world&rdquo; distribution we don&rsquo;t know.</p>
+<p>Calculate <code>$q_{t|0}(x_{t}|x_{0})$</code>:</p>
+<p>Since <code>$q_{t|t-1}(x_{t}|x_{t-1}) = \mathcal{N}(\sqrt{ \alpha_{t} }x_{t-1}, (1-\alpha_{t})I_{d})$</code>, we can generate <code>$x_{t}$</code> by sampling <code>$\epsilon_{t-1} \sim \mathcal{N}(0, I_{d})$</code> and
+<code>$$ x_{t} = \sqrt{ \alpha_{t} }x_{t-1} + \sqrt{ 1-\alpha_{t} }\epsilon_{t-1} $$</code>
+which is an iterative relation between <code>$x_{t}$</code> and <code>$x_{t-1}$</code>.</p>
+<p>Thus
+<code>$$ \begin{align} x_{t}  &amp; = \sqrt{ \alpha_{t} }x_{t-1}+\sqrt{ 1-\alpha_{t} }\epsilon_{t-1} \\ &amp; = \sqrt{ \alpha_{t} }(\sqrt{ \alpha_{t-1}  }x_{t-2} + \sqrt{ 1-\alpha_{t-1} }\epsilon_{t-2})+\sqrt{ 1-\alpha_{t} }\epsilon_{t-1} \\ &amp; = \sqrt{ \alpha_{t}\alpha_{t-1} }x_{t-2} + \sqrt{ \alpha_{t}(1-\alpha_{t-1}) }\epsilon_{t-2}+\sqrt{ 1-\alpha_{t} }\epsilon_{t-1} \\ &amp; = \sqrt{ \alpha_{t}\alpha_{t-1} }x_{t-2}+\sqrt{ 1-\alpha_{t}\alpha_{t-1} }\epsilon \text{    ;   because } \epsilon_{i} \perp \epsilon_{j}\\ &amp; \dots \\ &amp; = \sqrt{ \alpha_{t}\dots\alpha_{1} }x_{0}+\sqrt{ 1-\alpha_{t}\dots\alpha_{1} }\epsilon \end{align} $$</code></p>
+<p>We have a closed form of <code>$q_{t|0}(x_{t}|x_{0})$</code>, so we can sample <code>$x_{t}$</code> at any arbitrary time step <code>$t$</code>.</p>
+<p>Notice that
+<code>$$ \lim_{ T \to \infty } x_{T} = \lim_{ T \to \infty } \sqrt{ \bar{\alpha}_{T} }x_{0} + \sqrt{ 1-\bar{\alpha}_{T} }\epsilon = \epsilon $$</code>
+since <code>$\bar{\alpha}_{T} = \alpha_{T}\dots\alpha_{1}$</code> and <code>$\alpha_{i} &lt; 1$</code>.</p>
+<p>Compute <code>$q(x_{t-1}|x_{t}, x_{0}) = \frac{q(x_{t}|x_{t-1}, x_{0})q(x_{t-1}|x_{0})}{q(x_{t}|x_{0})}$</code>:</p>
+<p><code>$$ q(x_{t-1}|x_{t}, x_{0}) = \mathcal{N}(x_{t-1}; \tilde{\mu}(x_{t}, x_{0}), \tilde{\beta}_{t}I) $$</code>
+where
+<code>$$ \begin{align} \tilde{\beta}_{t}  &amp; = \frac{1-\bar{\alpha}_{t-1}}{1-\bar{\alpha}_{t}}\cdot\beta_{t} \\ \tilde{\mu}_{t}(x_{t}, x_{0}) &amp; = \frac{\sqrt{ \alpha_{t} }(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_{t}}x_{t}+\frac{\sqrt{ \bar{\alpha}_{t-1} }\beta_{t}}{1-\bar{\alpha}_{t}}x_{0} \\ &amp; = \frac{1}{\sqrt{ \alpha_{t} }}\left( x_{t}- \frac{1-\alpha_{t}}{\sqrt{ 1-\bar{\alpha}_{t} }}\epsilon_{t} \right) \end{align} $$</code></p>
+<p>Thus we would like to approximate <code>$q(x_{t}|x_{t+1})$</code> with a surrogate distribution <code>$p_{\theta}(x_{t}|x_{t+1})$</code>.</p>
+<p><strong>When <code>$\beta_{t}$</code> is small <code>$q(x_{t}|x_{t+1})$</code> will also be Gaussian</strong>, so we can model <code>$p_{\theta}(x_{t}|x_{t+1})$</code> as
+<code>$$ p_{\theta}(x_{t-1}|x_{t}) = \mathcal{N}(\mu_{\theta}(x_{t}, t), \Sigma_{\theta}(x_{t}, t)) $$</code></p>
+<p>The data distribution is thus
+<code>$$ \begin{align} p_{\theta}(x_{0})  &amp; = \int  p_{\theta}(x_{0:T}) \, dx_{1:T}\\ &amp; = \int  p_{\theta}(x_{T})\prod_{t=1}^{T}p_{\theta}(x_{t-1}|x_{t}) \, dx_{1:T}  \end{align} $$</code>
+where <code>$x_{1}, \dots x_{T}$</code> are all latent variables</p>
+<p>Specially, minimize the KL divergence between posterior <code>$q(x_{1:T}|x_{0})$</code> and <code>$p_{\theta}(x_{1:T}|x_{0})$</code>
+<code>$$ \begin{align} \\ \hat{\theta}  &amp; = \underset{ \theta }{ \operatorname{arg min} }\ \text{KL} (q(x_{1:T}|x_{0})\mid\mid p_{\theta}(x_{1:T}|x_{0})) \\ &amp; = \underset{ \theta }{ \operatorname{arg min } }\ \log p_{\theta}(x_{0}) -\mathbb{E}_{x_{1:T} \sim q(x_{1:T}|x_{0})}\left[ \log \frac{p_{\theta}(x_{0:T})}{q(x_{1:T}|x_{0})} \right] \\ &amp; \approx \underset{ \theta }{ \operatorname{arg max} }\ \mathbb{E}_{q}\left[ \log \frac{p_{\theta}(x_{0:T})}{q(x_{1:T}|x_{0})} \right] \end{align} $$</code></p>
+<p>This is conceptually similar to VAE because we are maximizing the lower bound of <code>$\log p_{\theta}(x)$</code>
+<code>$$ \begin{align} \log p_{\theta}(x_{0})  &amp; = \text{KL}(q(x_{1:T}|x_{0})\mid\mid p_{\theta}(x_{1:T}|x_{0}) ) + \mathbb{E}_{x_{1:T}\sim q}\left[ \log \frac{p_{\theta}(x_{0:T})}{q(x_{1:T}|x_{0})} \right]\\ &amp; \geq \mathbb{E}_{x_{1:T}\sim q}\left[ \log \frac{p_{\theta}(x_{0:T})}{q(x_{1:T}|x_{0})} \right] \\ \implies \mathbb{E}_{q(x_{0})}[\log p_{\theta}(x_{0})]  &amp; \geq \mathbb{E}_{q(x_{0})}\left[ \mathbb{E}_{q(x_{1:T}|x_{0})}\left[ \log \frac{p_{\theta}(x_{0:T})}{q(x_{1:T}|x_{0})} \right] \right] \\ &amp; = \mathbb{E}_{q(x_{0:T})}\left[ \log \frac{p_{\theta}(x_{0:T})}{q(x_{1:T}|x_{0})_{}} \right] \end{align} $$</code></p>
+<p>We can define the loss as <strong>negative</strong> ELBO and decompose the loss as below
+<code>$$ \begin{align} L_{VLB}  &amp; = \mathbb{E}_{q(x_{0:T})}\left[ \log \frac{q(x_{1:T}|x_{0})}{p_{\theta}(x_{0:T})} \right] \\ &amp; =\underbrace{\mathbb{E}_{q(x_{0})}[D_{\mathrm{KL}}\left(q\left(\mathbf{x}_T \mid \mathbf{x}_0\right) \| p_\theta\left(\mathbf{x}_T\right)\right)]}_{L_T}+\sum_{t=2}^T \underbrace{\mathbb{E}_{q(x_{t}, x_{0})}[D_{\mathrm{KL}}\left(q\left(\mathbf{x}_{t-1} \mid \mathbf{x}_t, \mathbf{x}_0\right) \| p_\theta\left(\mathbf{x}_{t-1} \mid \mathbf{x}_t\right)\right)]}_{L_{t-1}}-\underbrace{\mathbb{E}_{q(x_{0}, x_{1})}[\log p_\theta\left(\mathbf{x}_0 \mid \mathbf{x}_1\right)}_{L_0}] \end{align} $$</code></p>
+<p>Since we assume <code>$p_{\theta}(x_{T}) = \mathcal{N}(x_{T}; 0, I)$</code>, <code>$L_{\text{T}}$</code> is a fixed term can can be ignored.</p>
+<p><code>$L_{t-1}$</code> has a closed form expression because <code>$q(x_{t-1}|x_{t}, x_{0})$</code> and <code>$p_{\theta}(x_{t-1}|x_{t})$</code> are both normal distribution
+<code>$$ D_{\mathrm{KL}}\left(\mathcal{N}_0 \| \mathcal{N}_1\right)=\frac{1}{2}\left(\operatorname{tr}\left(\Sigma_1^{-1} \Sigma_0\right)-k+\left(\mu_1-\mu_0\right)^{\top} \Sigma_1^{-1}\left(\mu_1-\mu_0\right)+\ln \left(\frac{\operatorname{det} \Sigma_1}{\operatorname{det} \Sigma_0}\right)\right) $$</code>
+By setting <code>$\Sigma_{\theta}(x_{t}, t) = \sigma^{2}_{t}I$</code>, we get
+<code>$$ L_{t-1} = \mathbb{E}_{q(x_{0}, x_{t})}\left[ \frac{1}{2\sigma^{2}_{t}}\lvert \lvert \tilde{\mu}_{t}(x_{t}, x_{0}) - \mu_{\theta}(x_{t}, t) \rvert \rvert ^{2}\right] + C $$</code>
+Since we have shown that
+<code>$$ \tilde{\mu}_{t}(x_{t}, x_{0}) = \frac{1}{\sqrt{ \alpha_{t} }}\left( x_{t}- \frac{1-\alpha_{t}}{\sqrt{ 1-\bar{\alpha}_{t} }}\epsilon_{t} \right) $$</code>
+and we know <code>$x_{t}$</code> in the training, we can set
+<code>$$ \mu_{\theta}(x_{t}, t) = \frac{1}{\sqrt{ \alpha_{t} }}\left( x_{t}- \frac{1-\alpha_{t}}{\sqrt{ 1-\bar{\alpha}_{t} }}\epsilon_{\theta}(x_{t}, t) \right) $$</code>
+As a result,
+<code>$$ L_{t-1} = \mathbb{E}_{\mathbf{x}_0, \epsilon_{t}}\left[\frac{\left(1-\alpha_t\right)^2}{2 \alpha_t\left(1-\bar{\alpha}_t\right)\sigma^{2}_{t}}\left\|\boldsymbol{\epsilon}_t-\boldsymbol{\epsilon}_\theta\left(\mathbf{x}_t, t\right)\right\|^2\right] $$</code>
+which can be viewed as minimizing the MSE between the noise and our predictor (estimator).</p>
+<p>Conceptually, what our model is doing is taking a sample from the pure noise (Gaussian distribution), keeping removing noise and moving it towards the real distribution.</p>
+
+
+<p style="color:#777;">Last modified on 2024-06-25</p>
+</div>
+<a href="#top"><i class="fa fa-chevron-up" style="font-size: 30px; color: black;"></i></a>
+
+</main>
+
+<footer class="footer">
+  <div class="content">
+
+<script src="https://giscus.app/client.js"
+        data-repo="hongtaoh/mywebsite"
+        data-repo-id="R_kgDOLwIVBA"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOLwIVBM4CeyR1"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+</br>
+ 
+</div>
+  <script type="text/javascript" src="/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="/js/center-img.js"></script>
+
+
+
+     <ul class="footer-links">
+      
+       
+       
+       
+       <li><a href="/en/posts/index.xml" type="application/rss+xml" title="RSS feed">
+       Subscribe </a>
+       </li>
+       
+       
+       <li>
+       
+        <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">
+       
+        License
+        <i class="fa fa-cc" aria-hidden="true" title="Attribution-NonCommercial-ShareAlike 4.0 International"></i> 
+        </a>
+       </li>
+       
+     </ul>
+     <div class="copyright-text">
+            
+            ©
+            
+            Yuchen Qiu
+            
+            2024-
+            
+     </div>
+
+</footer>
+
+
+
+
+
