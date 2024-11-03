@@ -141,12 +141,12 @@
 <p>The power of theory lies in its identification of constraints that must be satisfied and demonstration of how these constraints necessitate certain solutions. In the example of flight, feathers and wings have their current form not by chance or arbitrary design, but because certain properties must exist to achieve lift. Theory also provides implementation-independent principles: aerodynamic principles apply whether the wing is made of feathers or metal, or whether the wing moves horizontally. Satisfying the constraints described by theory is sufficient to generate lift. The world isn&rsquo;t random beyond comprehension — it has structure, and that structure imposes constraints. Good theories capture fundamental regularities and give us genuine explanatory power.</p>
 <p>Now, assuming cognition is ultimately information processing, let&rsquo;s examine the computational theory such systems must satisfy. Consider a familiar example: the cash register. We need to understand at the computational level what the device does and why it behaves as it does. It&rsquo;s performing arithmetic, specifically addition. Computational analysis starts with the input to the system and the output from the system. A cash register maps two numbers into single numbers while satisfying:</p>
 <ul>
-<li>Commutativity $(A+B=B+A)$</li>
-<li>Associativity $((A+B)+C=A+(B+C))$</li>
-<li>Identity $(A+0=A)$</li>
-<li>Inverse $(A+(-A)=0)$</li>
+<li>Commutativity <code>$(A+B=B+A)$</code></li>
+<li>Associativity <code>$((A+B)+C=A+(B+C))$</code></li>
+<li>Identity <code>$(A+0=A)$</code></li>
+<li>Inverse <code>$(A+(-A)=0)$</code></li>
 </ul>
-<p>These operations meet constraints we intuitively expect when buying something — for example, the order in which goods are presented to the cashier should not affect the total (commutativity). The constraints capture essential properties of what we want the cash register to do while excluding inappropriate computations. For instance, a cash register shouldn&rsquo;t perform string concatenation because it&rsquo;s non-commutative $(A + B = AB != BA = B + A)$.</p>
+<p>These operations meet constraints we intuitively expect when buying something — for example, the order in which goods are presented to the cashier should not affect the total (commutativity). The constraints capture essential properties of what we want the cash register to do while excluding inappropriate computations. For instance, a cash register shouldn&rsquo;t perform string concatenation because it&rsquo;s non-commutative <code>$(A + B = AB != BA = B + A)$</code>.</p>
 <p>To summarize, this level asks what problem the system is trying to solve and what constraints it must satisfy. As the saying goes, sometimes you need to step back to see the wood for the trees. As Marr explains:</p>
 <blockquote>
 <p>In the theory of visual processes, the underlying task is to reliably derive properties of the world from images of it; the business of isolating constraints that are both powerful enough to allow a process to be defined and generally true of the world is a central theme of our inquiry. (Marr, 1982)</p>
@@ -174,7 +174,7 @@
 <li>Different representation make different information explicit</li>
 <li>The choice of representation can make subsequent operations either easy or hard</li>
 </ul>
-<p>After choosing an appropriate representation, we must specify an algorithm for transformation. With addition, we follow rules about adding least significant digits first and &ldquo;carrying&rdquo; when the sum exceeds 9. Note that algorithm choice depends mainly on the representation, and multiple algorithms can work with the same representation. Consider determining whether a number is even. Using an array representation $(5 := [1, 1, 1, 1, 1])$, we can implement two different approaches:</p>
+<p>After choosing an appropriate representation, we must specify an algorithm for transformation. With addition, we follow rules about adding least significant digits first and &ldquo;carrying&rdquo; when the sum exceeds 9. Note that algorithm choice depends mainly on the representation, and multiple algorithms can work with the same representation. Consider determining whether a number is even. Using an array representation <code>$(5 := [1, 1, 1, 1, 1])$</code>, we can implement two different approaches:</p>
 <div class="highlight"><pre tabindex="0" style=";-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Python" data-lang="Python"><span style="display:flex;"><span><span style="color:#408080;font-style:italic"># Algorithm 1: Count elements</span>
 </span></span><span style="display:flex;"><span><span style="color:#008000;font-weight:bold">def</span> <span style="color:#00f">is_even_array_1</span>(arr):
 </span></span><span style="display:flex;"><span>    <span style="color:#008000;font-weight:bold">return</span> <span style="color:#008000">len</span>(arr) <span style="color:#666">%</span> <span style="color:#666">2</span> <span style="color:#666">==</span> <span style="color:#666">0</span>

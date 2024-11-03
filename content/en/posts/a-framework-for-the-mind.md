@@ -5,6 +5,7 @@ author: "Yuchen Qiu"
 slug:
 draft: false
 toc: false
+
 ---
 
 Disclaimer: This post is not for you if you disagree with the following statement:
@@ -56,12 +57,12 @@ The power of theory lies in its identification of constraints that must be satis
 
 Now, assuming cognition is ultimately information processing, let's examine the computational theory such systems must satisfy. Consider a familiar example: the cash register. We need to understand at the computational level what the device does and why it behaves as it does. It's performing arithmetic, specifically addition. Computational analysis starts with the input to the system and the output from the system. A cash register maps two numbers into single numbers while satisfying:
 
-* Commutativity $(A+B=B+A)$
-* Associativity $((A+B)+C=A+(B+C))$
-* Identity $(A+0=A)$
-* Inverse $(A+(-A)=0)$
+* Commutativity `$(A+B=B+A)$`
+* Associativity `$((A+B)+C=A+(B+C))$`
+* Identity `$(A+0=A)$`
+* Inverse `$(A+(-A)=0)$`
 
-These operations meet constraints we intuitively expect when buying something — for example, the order in which goods are presented to the cashier should not affect the total (commutativity). The constraints capture essential properties of what we want the cash register to do while excluding inappropriate computations. For instance, a cash register shouldn't perform string concatenation because it's non-commutative $(A + B = AB != BA = B + A)$. 
+These operations meet constraints we intuitively expect when buying something — for example, the order in which goods are presented to the cashier should not affect the total (commutativity). The constraints capture essential properties of what we want the cash register to do while excluding inappropriate computations. For instance, a cash register shouldn't perform string concatenation because it's non-commutative `$(A + B = AB != BA = B + A)$`. 
 
 To summarize, this level asks what problem the system is trying to solve and what constraints it must satisfy. As the saying goes, sometimes you need to step back to see the wood for the trees. As Marr explains:
 
@@ -99,7 +100,7 @@ Key points about representation:
 * Different representation make different information explicit
 * The choice of representation can make subsequent operations either easy or hard
 
-After choosing an appropriate representation, we must specify an algorithm for transformation. With addition, we follow rules about adding least significant digits first and "carrying" when the sum exceeds 9. Note that algorithm choice depends mainly on the representation, and multiple algorithms can work with the same representation. Consider determining whether a number is even. Using an array representation $(5 := [1, 1, 1, 1, 1])$, we can implement two different approaches:
+After choosing an appropriate representation, we must specify an algorithm for transformation. With addition, we follow rules about adding least significant digits first and "carrying" when the sum exceeds 9. Note that algorithm choice depends mainly on the representation, and multiple algorithms can work with the same representation. Consider determining whether a number is even. Using an array representation `$(5 := [1, 1, 1, 1, 1])$`, we can implement two different approaches:
 
 ```Python
 # Algorithm 1: Count elements
