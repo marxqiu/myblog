@@ -194,3 +194,12 @@ Burge, Tyler. "Marr's Theory of Vision." In *Modularity in Knowledge Representat
 Harpaz, Yehouda. "Critique of Vision by Marr." Human Brain Project, September 26, 1996. https://human-brain.org/vision.html
 
 McClamrock, Ron. "Marr's Three Levels: A Re-evaluation." *Minds and Machines* 1, no. 2 (1991): 185-196. https://doi.org/10.1007/BF00361036
+
+
+
+
+
+# Acknowledgments
+
+I am especially grateful to Anmin Yang for many thoughtful and enjoyable conversations. I would also like to thank everyone who read drafts and provided valuable feedback.
+
