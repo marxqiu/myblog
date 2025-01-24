@@ -2,7 +2,7 @@
 title: "Summary of Poor Charlie’s Almanack"
 date: 2025-01-24T11:50:30-06:00
 author: "Yuchen Qiu"
-slug:
+slug: summary-of-poor-charlies-almanack
 draft: false
 toc: false
 ---
