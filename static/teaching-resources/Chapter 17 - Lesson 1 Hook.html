@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch 17 Lesson 1 — Hook</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0f1923;
+  color: #e2e8f0;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── HEADER ── */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  background: #0a1218;
+  border-bottom: 1px solid #1e3044;
+}
+.title  { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #4a90d9; }
+.status { font-size: 12px; color: #334155; letter-spacing: 1px; transition: color 0.3s; }
+.status.done { color: #22c55e; }
+
+/* ── MAIN ── */
+main {
+  display: flex; flex-direction: column;
+  padding: 18px 44px 16px;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.instruction {
+  text-align: center; font-size: 14px; color: #64748b; line-height: 1.5;
+}
+.instruction strong { color: #94a3b8; }
+
+/* ── BANK ── */
+#bank {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center;
+  min-height: 50px;
+  padding: 4px 0;
+}
+
+.event-card {
+  background: #132030;
+  border: 2px solid #1e3a52;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px; color: #cbd5e1;
+  cursor: grab;
+  transition: border-color 0.15s, opacity 0.2s, background 0.15s;
+  line-height: 1.3; text-align: center;
+}
+.event-card:hover:not(.placed) { border-color: #4a90d9; background: #1a2f44; }
+.event-card.placed { opacity: 0.2; pointer-events: none; }
+
+/* ── NUMBER LINE ZONE ── */
+#nl-zone {
+  flex: 1; position: relative; min-height: 0;
+}
+
+.track {
+  position: absolute; left: 64px; right: 64px; bottom: 54px;
+  height: 3px; background: #2e5070; border-radius: 2px;
+}
+.track::before, .track::after {
+  content: ''; position: absolute; top: -7px;
+  width: 3px; height: 17px; background: #2e5070; border-radius: 2px;
+}
+.track::before { left: -1px; }
+.track::after  { right: -1px; }
+
+.track-end {
+  position: absolute; bottom: 32px;
+  font-size: 15px; font-weight: 700; color: #4a90d9;
+  transform: translateX(-50%); pointer-events: none;
+}
+.tick { position: absolute; bottom: 54px; width: 1px; height: 10px; background: #1e3044; transform: translateX(-50%); pointer-events: none; }
+.tick-lbl { position: absolute; bottom: 32px; font-size: 11px; color: #1e3a52; transform: translateX(-50%); pointer-events: none; }
+
+/* ── NL CARDS ── */
+.nl-card {
+  position: absolute;
+  background: #132030;
+  border: 2px solid #2e5070;
+  border-radius: 8px;
+  padding: 7px 11px;
+  font-size: 12px; color: #cbd5e1;
+  text-align: center; max-width: 128px; line-height: 1.3;
+  transform: translateX(-50%);
+  cursor: grab;
+  transition: border-color 0.25s, background 0.25s,
+              left 0.45s cubic-bezier(.4,0,.2,1),
+              bottom 0.45s cubic-bezier(.4,0,.2,1);
+  z-index: 2;
+}
+.nl-card:hover { border-color: #4a90d9; background: #1a2f44; }
+.nl-card.wrong-order { border-color: #ef4444 !important; background: rgba(239,68,68,0.08) !important; }
+.nl-card.wrong-dist  { border-color: #f97316 !important; background: rgba(249,115,22,0.08) !important; }
+.nl-card.correct     { border-color: #22c55e !important; background: rgba(34,197,94,0.08) !important; }
+
+.nl-card .hint-arrow {
+  display: none; font-size: 11px; margin-top: 4px; font-weight: 700;
+}
+.nl-card.wrong-dist .hint-arrow { display: block; color: #f97316; }
+
+.nl-card .prob-badge {
+  display: none; margin-top: 5px;
+  font-size: 13px; font-weight: 700;
+}
+
+/* dot on line */
+.nl-dot {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  background: #2e5070; border: 2px solid #0f1923;
+  bottom: 51px; transform: translateX(-50%);
+  transition: left 0.45s cubic-bezier(.4,0,.2,1), background 0.25s;
+  pointer-events: none; z-index: 3;
+}
+
+/* ── FEEDBACK BAR ── */
+#feedback {
+  position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
+  font-size: 13px; color: #64748b; white-space: nowrap;
+  transition: color 0.3s, opacity 0.3s;
+  opacity: 0;
+}
+#feedback.visible { opacity: 1; }
+#feedback.error   { color: #fca5a5; }
+#feedback.warn    { color: #fdba74; }
+#feedback.ok      { color: #86efac; }
+
+/* ── BOTTOM BAR ── */
+#bottom-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding-bottom: 2px;
+}
+
+#check-btn {
+  padding: 10px 40px; border-radius: 7px; border: none;
+  background: #4a90d9; color: #fff;
+  font-size: 14px; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; transition: background 0.15s, opacity 0.2s;
+}
+#check-btn:hover:not(:disabled) { background: #3a7bc8; }
+#check-btn:disabled { opacity: 0.28; cursor: default; }
+
+#reset-btn {
+  padding: 10px 24px; border-radius: 7px;
+  border: 1px solid #1e3a52; background: transparent;
+  color: #475569; font-size: 13px; font-weight: 600; letter-spacing: 1px;
+  cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+#reset-btn:hover { border-color: #4a90d9; color: #4a90d9; }
+
+/* ── GHOST ── */
+#ghost {
+  position: fixed; pointer-events: none; z-index: 999;
+  background: #1a2f44; border: 2px solid #4a90d9; border-radius: 8px;
+  padding: 8px 14px; font-size: 13px; color: #f1f5f9;
+  display: none; white-space: normal; max-width: 150px; text-align: center;
+  transform: translate(-50%, -50%); line-height: 1.3;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+</style>
+</head>
+<body>
+<header>
+  <span class="title">Chapter 17 · Lesson 1 — Hook</span>
+  <span class="status" id="status">0 / 6 placed</span>
+</header>
+
+<main>
+  <p class="instruction">Drag each event onto the number line — <strong>left = less likely, right = more likely.</strong><br>Think carefully about <em>how far</em> along the line each event should go.</p>
+  <div id="bank"></div>
+  <div id="nl-zone">
+    <div class="track" id="track"></div>
+    <div id="feedback"></div>
+    <div id="bottom-bar">
+      <button id="check-btn" disabled onclick="doCheck()">Check →</button>
+      <button id="reset-btn" onclick="doReset()">↺ Reset</button>
+    </div>
+  </div>
+</main>
+
+<div id="ghost"></div>
+
+<script>
+const EVENTS = [
+  { id:0, text:"Rolling a 7 on a standard die",            prob:0,     label:"0",    color:"#ef4444" },
+  { id:1, text:"Drawing an ace from a shuffled deck",       prob:0.077, label:"1/13", color:"#f97316" },
+  { id:2, text:"Picking the blue ball (bag: 1 blue, 2 red)",prob:0.333, label:"1/3",  color:"#eab308" },
+  { id:3, text:"A flipped coin lands heads",                prob:0.5,   label:"1/2",  color:"#22c55e" },
+  { id:4, text:"You will have homework tonight",            prob:0.7,   label:"?",    color:"#3b82f6" },
+  { id:5, text:"A randomly chosen person is right-handed",  prob:0.9,   label:"~9/10",color:"#a855f7" },
+  { id:6, text:"It will get dark tonight",                  prob:1,     label:"1",    color:"#94a3b8" },
+];
+const TOLERANCE = 0.10;
+
+let placements = {};  // id → xFrac
+let checkPhase = null; // null | 'order' | 'distance' | 'done'
+let drag = null;
+
+/* ── DOM ── */
+const bank      = document.getElementById('bank');
+const nlZone    = document.getElementById('nl-zone');
+const ghost     = document.getElementById('ghost');
+const checkBtn  = document.getElementById('check-btn');
+const statusEl  = document.getElementById('status');
+const feedbackEl= document.getElementById('feedback');
+
+/* ── LAYOUT ── */
+function metrics() {
+  const r = nlZone.getBoundingClientRect();
+  const tl = 64, tr = 64;
+  return { r, tl, tw: r.width - tl - tr, tl, tb: 54 };
+}
+
+/* ── BANK ── */
+function buildBank() {
+  bank.innerHTML = '';
+  EVENTS.forEach(ev => {
+    const el = document.createElement('div');
+    el.className = 'event-card' + (placements[ev.id] !== undefined ? ' placed' : '');
+    el.dataset.id = ev.id;
+    el.textContent = ev.text;
+    el.style.borderColor = ev.color + '55';
+    bank.appendChild(el);
+  });
+}
+
+/* ── TICKS & LABELS ── */
+function renderStatic() {
+  nlZone.querySelectorAll('.track-end,.tick,.tick-lbl').forEach(e => e.remove());
+  const { tl, tw } = metrics();
+  [0, 1].forEach(v => {
+    const el = document.createElement('div');
+    el.className = 'track-end';
+    el.textContent = v;
+    el.style.left = (tl + v * tw) + 'px';
+    nlZone.appendChild(el);
+  });
+  [0.25, 0.5, 0.75].forEach(v => {
+    const t = document.createElement('div');
+    t.className = 'tick'; t.style.left = (tl + v * tw) + 'px';
+    const l = document.createElement('div');
+    l.className = 'tick-lbl'; l.textContent = v; l.style.left = (tl + v * tw) + 'px';
+    nlZone.appendChild(t); nlZone.appendChild(l);
+  });
+}
+
+/* ── LEVEL ASSIGNMENT (collision avoidance) ── */
+function assignLevels(items) {
+  const cardW = 128, levelH = 70;
+  const assigned = [];
+  items.forEach(item => {
+    const { tl, tw } = metrics();
+    const cx = tl + item.xFrac * tw;
+    const left = cx - cardW / 2, right = cx + cardW / 2;
+    let level = 0, collision = true;
+    while (collision) {
+      collision = assigned.some(a => a.level === level && a.right > left - 6);
+      if (collision) level++;
+    }
+    assigned.push({ ...item, level, right });
+  });
+  return assigned;
+}
+
+/* ── RENDER NL CARDS ── */
+function renderNl(highlights = {}) {
+  nlZone.querySelectorAll('.nl-card,.nl-dot').forEach(e => e.remove());
+  const { tl, tw, tb } = metrics();
+  const levelH = 70;
+
+  const items = Object.entries(placements)
+    .map(([id, xFrac]) => ({ id: +id, xFrac }))
+    .sort((a, b) => a.xFrac - b.xFrac);
+
+  const positioned = assignLevels(items);
+
+  positioned.forEach(({ id, xFrac, level }) => {
+    const ev = EVENTS[id];
+    const cx = tl + xFrac * tw;
+    const bottom = tb + 18 + level * levelH;
+    const state = highlights[id]; // 'wrong-order' | 'wrong-dist' | 'correct' | undefined
+
+    // dot
+    const dot = document.createElement('div');
+    dot.className = 'nl-dot'; dot.dataset.id = id;
+    dot.style.left = cx + 'px';
+    dot.style.background = state === 'wrong-order' ? '#ef4444'
+                         : state === 'wrong-dist'  ? '#f97316'
+                         : state === 'correct'     ? '#22c55e'
+                         : ev.color + '66';
+    nlZone.appendChild(dot);
+
+    // card
+    const card = document.createElement('div');
+    card.className = 'nl-card' + (state ? ' ' + state : '');
+    card.dataset.id = id;
+    card.style.left = cx + 'px';
+    card.style.bottom = bottom + 'px';
+    if (!state) card.style.borderColor = ev.color + '66';
+
+    // distance hint arrow
+    const arrow = document.createElement('div');
+    arrow.className = 'hint-arrow';
+    if (state === 'wrong-dist') {
+      arrow.textContent = xFrac > ev.prob ? '← move left' : 'move right →';
+    }
+
+    // prob badge (shown after reveal)
+    const badge = document.createElement('div');
+    badge.className = 'prob-badge';
+    badge.style.color = ev.color;
+    badge.textContent = ev.label;
+
+    card.innerHTML = `<span class="card-text">${ev.text}</span>`;
+    card.appendChild(arrow);
+    card.appendChild(badge);
+    nlZone.appendChild(card);
+  });
+}
+
+/* ── STATUS ── */
+function updateStatus() {
+  const n = Object.keys(placements).length;
+  statusEl.textContent = n === EVENTS.length ? 'All placed — ready to check' : `${n} / ${EVENTS.length} placed`;
+  statusEl.classList.toggle('done', n === EVENTS.length);
+  checkBtn.disabled = n < EVENTS.length || checkPhase === 'done';
+}
+
+/* ── FEEDBACK ── */
+function showFeedback(msg, type) {
+  feedbackEl.textContent = msg;
+  feedbackEl.className = 'visible ' + type;
+}
+function hideFeedback() { feedbackEl.className = ''; }
+
+/* ── CHECK LOGIC ── */
+function doCheck() {
+  const entries = Object.entries(placements).map(([id, xFrac]) => ({
+    id: +id, xFrac, prob: EVENTS[+id].prob
+  }));
+
+  // Sort by placement position and by correct probability
+  const byX    = [...entries].sort((a, b) => a.xFrac - b.xFrac);
+  const byProb = [...entries].sort((a, b) => a.prob  - b.prob);
+
+  // ── ORDER CHECK ──
+  const orderWrong = new Set();
+  byX.forEach((item, i) => {
+    if (item.id !== byProb[i].id) {
+      orderWrong.add(item.id);
+      orderWrong.add(byProb[i].id);
+    }
+  });
+
+  if (orderWrong.size > 0) {
+    checkPhase = 'order';
+    const h = {};
+    entries.forEach(({ id }) => { h[id] = orderWrong.has(id) ? 'wrong-order' : undefined; });
+    renderNl(h);
+    const n = orderWrong.size;
+    showFeedback(`${n} event${n > 1 ? 's are' : ' is'} out of order — move the red card${n > 1 ? 's' : ''} and try again.`, 'error');
+    checkBtn.textContent = 'Check Again →';
+    return;
+  }
+
+  // ── DISTANCE CHECK ──
+  const distWrong = new Set();
+  entries.forEach(({ id, xFrac }) => {
+    if (Math.abs(xFrac - EVENTS[id].prob) > TOLERANCE) distWrong.add(id);
+  });
+
+  if (distWrong.size > 0) {
+    checkPhase = 'distance';
+    const h = {};
+    entries.forEach(({ id }) => { h[id] = distWrong.has(id) ? 'wrong-dist' : 'correct'; });
+    renderNl(h);
+    const n = distWrong.size;
+    showFeedback(`Order is correct! But ${n} event${n > 1 ? 's are' : ' is'} not in quite the right position — adjust the orange card${n > 1 ? 's' : ''}.`, 'warn');
+    checkBtn.textContent = 'Check Again →';
+    return;
+  }
+
+  // ── ALL CORRECT → REVEAL ──
+  checkPhase = 'done';
+  const h = {};
+  entries.forEach(({ id }) => { h[id] = 'correct'; });
+  renderNl(h);
+  showFeedback('Everything looks right! Watch where each event lands…', 'ok');
+  checkBtn.disabled = true;
+  checkBtn.textContent = 'Check Again →';
+
+  // Animate to exact positions then show probability numbers
+  const { tl, tw, tb } = metrics();
+  const levelH = 70;
+
+  const sorted = [...EVENTS].sort((a, b) => a.prob - b.prob);
+  const cardW = 128;
+  const assigned2 = [];
+  sorted.forEach(ev => {
+    const cx = tl + ev.prob * tw;
+    const left = cx - cardW / 2, right = cx + cardW / 2;
+    let level = 0, collision = true;
+    while (collision) {
+      collision = assigned2.some(a => a.level === level && a.right > left - 6);
+      if (collision) level++;
+    }
+    assigned2.push({ id: ev.id, level, right });
+    ev._level = level;
+  });
+
+  setTimeout(() => {
+    EVENTS.forEach((ev, i) => {
+      const cx = tl + ev.prob * tw;
+      const bottom = tb + 18 + ev._level * levelH;
+      const card = nlZone.querySelector(`.nl-card[data-id="${ev.id}"]`);
+      const dot  = nlZone.querySelector(`.nl-dot[data-id="${ev.id}"]`);
+      if (card) {
+        card.style.left   = cx + 'px';
+        card.style.bottom = bottom + 'px';
+        card.style.borderColor = ev.color;
+        card.style.cursor = 'default';
+        setTimeout(() => {
+          const badge = card.querySelector('.prob-badge');
+          if (badge) badge.style.display = 'block';
+        }, 400 + i * 80);
+      }
+      if (dot) { dot.style.left = cx + 'px'; dot.style.background = ev.color; }
+    });
+  }, 60);
+}
+
+/* ── DRAG (mouse + touch) ── */
+function startDrag(e, id, fromLine) {
+  if (checkPhase === 'done') return;
+  e.preventDefault?.();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+
+  // If re-dragging from line, remove placement first
+  if (fromLine) {
+    delete placements[id];
+    renderNl();
+    updateStatus();
+    hideFeedback();
+    checkBtn.textContent = 'Check →';
+    checkPhase = null;
+  }
+
+  drag = { id };
+  ghost.textContent = EVENTS[id].text;
+  ghost.style.display = 'block';
+  moveGhost(cx, cy);
+}
+
+function moveGhost(cx, cy) {
+  ghost.style.left = cx + 'px';
+  ghost.style.top  = cy + 'px';
+}
+
+function endDrag(e) {
+  if (!drag) return;
+  const cx = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+  const cy = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+  ghost.style.display = 'none';
+
+  const { r, tl, tw } = metrics();
+  const inZone = cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+
+  if (inZone) {
+    const xFrac = Math.max(0, Math.min(1, (cx - r.left - tl) / tw));
+    placements[drag.id] = xFrac;
+    const bankCard = bank.querySelector(`[data-id="${drag.id}"]`);
+    if (bankCard) bankCard.classList.add('placed');
+    renderNl();
+    updateStatus();
+    // reset check state if something was re-placed
+    if (checkPhase && checkPhase !== 'done') { hideFeedback(); checkBtn.textContent = 'Check →'; checkPhase = null; }
+  }
+  drag = null;
+}
+
+document.addEventListener('mousemove', e => { if (drag) moveGhost(e.clientX, e.clientY); });
+document.addEventListener('mouseup',   e => endDrag(e));
+document.addEventListener('touchmove', e => { if (drag) moveGhost(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+document.addEventListener('touchend',  e => endDrag(e));
+
+document.addEventListener('mousedown', e => {
+  const bc = e.target.closest('#bank .event-card:not(.placed)');
+  const nc = e.target.closest('#nl-zone .nl-card');
+  if (bc) startDrag(e, +bc.dataset.id, false);
+  else if (nc) startDrag(e, +nc.dataset.id, true);
+});
+document.addEventListener('touchstart', e => {
+  const bc = e.target.closest('#bank .event-card:not(.placed)');
+  const nc = e.target.closest('#nl-zone .nl-card');
+  if (bc) startDrag(e, +bc.dataset.id, false);
+  else if (nc) startDrag(e, +nc.dataset.id, true);
+}, { passive: false });
+
+/* ── RESET ── */
+function doReset() {
+  placements = {}; checkPhase = null;
+  nlZone.querySelectorAll('.nl-card,.nl-dot').forEach(e => e.remove());
+  hideFeedback();
+  checkBtn.textContent = 'Check →';
+  checkBtn.disabled = true;
+  buildBank(); renderStatic(); updateStatus();
+}
+
+/* ── INIT ── */
+buildBank(); renderStatic(); updateStatus();
+window.addEventListener('resize', () => { renderStatic(); renderNl(); });
+</script>
+</body>
+</html>

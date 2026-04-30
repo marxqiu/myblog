@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mission Artemis — Launch Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Space Mono', 'Courier New', monospace;
+  background: #020b18;
+  color: #c8d8e8;
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 52px 1fr 60px;
+}
+
+/* ─── STARS ─── */
+#starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+/* ─── TOP BAR ─── */
+.topbar {
+  position: relative; z-index: 10;
+  background: rgba(2,11,24,0.92);
+  border-bottom: 1px solid #0d2a4a;
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+.topbar-title { font-size: 11px; letter-spacing: 3px; color: #3a80d0; }
+.stage-badge {
+  font-size: 9px; letter-spacing: 1.5px;
+  padding: 4px 14px; border-radius: 20px; border: 1px solid;
+  transition: all 0.4s;
+}
+.stage-badge.s1 { background: rgba(220,90,30,0.15); border-color: #dc5a1e; color: #fb923c; }
+.stage-badge.s2 { background: rgba(22,163,74,0.15);  border-color: #16a34a; color: #4ade80;  }
+.status-msg { font-size: 9px; letter-spacing: 1px; color: #475569; text-align: right; min-width: 220px; }
+
+/* ─── MAIN ─── */
+.main {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 288px 1fr 288px;
+  overflow: hidden;
+}
+
+/* ─── SIDE COLUMNS ─── */
+.side-col {
+  display: flex; flex-direction: column;
+  gap: 10px; padding: 14px 14px;
+  justify-content: center;
+}
+
+/* ─── GROUP CARD ─── */
+.group-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 9px;
+  overflow: hidden;
+  transition: border-color 0.3s, background 0.3s;
+}
+.group-card.correct   { border-color: #16a34a; background: rgba(22,163,74,0.07); }
+.group-card.incorrect { border-color: #dc2626; background: rgba(220,38,38,0.07); }
+
+.g-header {
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.g-eyebrow {
+  font-size: 7px; letter-spacing: 2px; color: #475569; text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.g-param { font-size: 11px; color: #94a3b8; font-weight: 700; }
+
+/* ─── MEASUREMENT TABLE ─── */
+.meas-wrap { padding: 8px 12px 4px; }
+
+.meas-table { width: 100%; border-collapse: collapse; }
+.meas-table tr td { padding: 5px 4px; font-size: 11px; line-height: 1.2; }
+.meas-table .td-name { color: #64748b; width: 40%; }
+.meas-table .td-val  {
+  color: #e2e8f0; font-size: 14px; font-weight: 700;
+  text-align: right; letter-spacing: 0.5px;
+  width: 30%;
+}
+.meas-table .td-unit {
+  width: 30%; text-align: left; padding-left: 6px;
+  font-size: 11px; color: #fbbf24;
+  opacity: 0; transition: opacity 0.4s;
+}
+body.stage2 .meas-table .td-unit { opacity: 1; }
+
+.meas-divider {
+  border: none; border-top: 1px dashed rgba(255,255,255,0.07);
+  margin: 6px 0 4px;
+}
+
+/* Stage instruction line */
+.g-instruction {
+  padding: 0 12px 4px;
+  font-size: 9px; letter-spacing: 0.5px;
+  transition: color 0.3s;
+}
+.g-instruction.s1 { color: #475569; }
+.g-instruction.s2 { color: #fbbf24; display: none; }
+body.stage2 .g-instruction.s1 { display: none; }
+body.stage2 .g-instruction.s2 { display: block; }
+/* hide s1 instruction — don't hint at what's missing */
+.g-instruction.s1 { display: none; }
+
+/* ─── INPUT ROW ─── */
+.g-input-wrap { padding: 4px 12px 10px; }
+.g-input-row  { display: flex; align-items: center; gap: 8px; }
+.g-input-row input {
+  flex: 1; min-width: 0;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #1e3a5f;
+  border-radius: 5px;
+  color: #e2e8f0;
+  padding: 7px 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 16px; text-align: right;
+  outline: none; transition: border-color 0.2s;
+}
+.g-input-row input:focus { border-color: #3a80d0; }
+.g-input-row .eq-label  { font-size: 10px; color: #475569; white-space: nowrap; }
+.g-input-row .m-label   { font-size: 12px; color: #475569; opacity: 0; transition: opacity 0.4s; }
+body.stage2 .g-input-row .m-label { opacity: 1; }
+
+.g-status {
+  font-size: 9px; letter-spacing: 0.5px;
+  min-height: 13px; padding: 0 12px 6px;
+}
+.g-status.ok   { color: #22c55e; }
+.g-status.err  { color: #ef4444; }
+
+/* ─── CENTER ─── */
+.center-col {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  position: relative; overflow: hidden;
+}
+
+.rocket-wrap {
+  position: relative;
+  transform-origin: center bottom;
+}
+svg.rocket { display: block; overflow: visible; }
+
+.flame-group {
+  position: absolute; bottom: -6px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 3px;
+  opacity: 0; transform-origin: center top;
+}
+.flame {
+  width: 14px; height: 28px;
+  border-radius: 0 0 7px 7px;
+  animation: flicker 0.14s ease-in-out infinite alternate;
+}
+.flame:nth-child(1) { background: linear-gradient(#fff5c0,#f97316,transparent); animation-delay: 0s;    }
+.flame:nth-child(2) { background: linear-gradient(#fff5c0,#f97316,transparent); height: 40px; animation-delay: 0.05s; }
+.flame:nth-child(3) { background: linear-gradient(#fff5c0,#f97316,transparent); animation-delay: 0.1s;  }
+@keyframes flicker {
+  from { transform: scaleX(1)    scaleY(1);    }
+  to   { transform: scaleX(0.88) scaleY(1.14); }
+}
+
+.rocket-wrap.idle .flame-group { opacity: 0.2; }
+
+.rocket-wrap.ignite .flame-group {
+  opacity: 1;
+  animation: growFlame 0.8s ease-out forwards;
+}
+@keyframes growFlame {
+  from { transform: translateX(-50%) scaleY(0.4); opacity: 0.3; }
+  to   { transform: translateX(-50%) scaleY(2.6); opacity: 1;   }
+}
+.rocket-wrap.launching {
+  animation: launchAnim 2.8s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+.rocket-wrap.launching .flame-group { opacity: 1; transform: translateX(-50%) scaleY(3); }
+@keyframes launchAnim {
+  0%   { transform: translateY(0); }
+  8%   { transform: translateY(12px); }
+  18%  { transform: translateY(0); }
+  100% { transform: translateY(-130vh); }
+}
+.rocket-wrap.failing {
+  animation: failAnim 1.8s ease-in forwards;
+}
+@keyframes failAnim {
+  0%   { transform: rotate(0)   translateX(0)   translateY(0);   opacity:1; }
+  28%  { transform: rotate(18deg) translateX(18px); }
+  55%  { transform: rotate(75deg) translateX(55px) translateY(30px); }
+  80%  { transform: rotate(90deg) translateX(88px) translateY(90px); opacity:1; }
+  100% { transform: rotate(90deg) translateX(130px) translateY(180px); opacity:0; }
+}
+
+.ground {
+  width: 100%; height: 48px;
+  background: linear-gradient(to bottom, #1e293b 0%, #0f172a 100%);
+  flex-shrink: 0; position: relative;
+}
+.ground::before {
+  content:''; position:absolute; left:50%; top:0;
+  transform:translateX(-50%);
+  width:110px; height:7px;
+  background:#334155; border-radius: 0 0 3px 3px;
+}
+.ground::after {
+  content:''; position:absolute; left:50%; top:0;
+  transform:translateX(-50%);
+  width:12px; height:22px;
+  background:#334155;
+}
+
+/* ─── EXPLOSION ─── */
+#explosion-canvas {
+  position:absolute; bottom:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none; display:none;
+}
+
+/* ─── BOTTOM BAR ─── */
+.bottombar {
+  position: relative; z-index: 10;
+  background: rgba(2,11,24,0.95);
+  border-top: 1px solid #0d2a4a;
+  display: flex; align-items: center;
+  justify-content: center; gap: 12px;
+  padding: 0 24px;
+}
+.btn {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; letter-spacing: 1.5px;
+  padding: 8px 20px; border: 1px solid;
+  border-radius: 6px; cursor: pointer;
+  text-transform: uppercase; outline: none;
+  transition: all 0.2s;
+}
+.btn-launch {
+  background: #15803d; border-color: #16a34a; color: #f0fdf4;
+  font-size: 12px; padding: 9px 36px; letter-spacing: 2.5px;
+}
+.btn-launch:hover:not(:disabled) { background: #16a34a; }
+.btn-launch:disabled { background: #1e293b; border-color: #334155; color: #475569; cursor: not-allowed; }
+.btn-stage { background: transparent; border-color: #1e3a5f; color: #64748b; }
+.btn-stage:hover { border-color: #3a80d0; color: #94a3b8; }
+.btn-reset { background: transparent; border-color: #374151; color: #6b7280; }
+.btn-reset:hover { border-color: #6b7280; color: #9ca3af; }
+
+/* ─── LIGHT THEME ─── */
+body.light { background: #e8f0f8; color: #1e293b; }
+body.light #starfield { opacity: 0; }
+body.light .center-col { background: linear-gradient(to bottom, #bfdbfe 0%, #dbeafe 40%, #e0f2fe 100%); }
+body.light .topbar { background: rgba(255,255,255,0.96); border-color: #cbd5e1; }
+body.light .topbar-title { color: #1d4ed8; }
+body.light .status-msg { color: #94a3b8; }
+body.light .stage-badge.s1 { background: rgba(234,88,12,0.1); border-color: #ea580c; color: #c2410c; }
+body.light .stage-badge.s2 { background: rgba(22,163,74,0.1); border-color: #16a34a; color: #15803d; }
+body.light .group-card { background: #ffffff; border-color: #e2e8f0; }
+body.light .group-card.correct   { background: #f0fdf4; border-color: #16a34a; }
+body.light .group-card.incorrect { background: #fef2f2; border-color: #dc2626; }
+body.light .g-header { border-color: #f1f5f9; }
+body.light .g-eyebrow { color: #94a3b8; }
+body.light .g-param { color: #334155; }
+body.light .meas-table .td-name { color: #64748b; }
+body.light .meas-table .td-val  { color: #0f172a; }
+body.light .meas-table .td-unit { color: #d97706; }
+body.light .meas-divider { border-color: #f1f5f9; }
+body.light .g-instruction.s2 { color: #d97706; }
+body.light .g-input-row input { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+body.light .g-input-row input:focus { border-color: #3b82f6; }
+body.light .g-input-row .eq-label { color: #94a3b8; }
+body.light .g-input-row .m-label  { color: #94a3b8; }
+body.light .ground { background: linear-gradient(to bottom, #64748b 0%, #475569 100%); }
+body.light .ground::before,
+body.light .ground::after { background: #475569; }
+body.light .bottombar { background: rgba(255,255,255,0.96); border-color: #cbd5e1; }
+body.light .btn-stage { border-color: #cbd5e1; color: #64748b; }
+body.light .btn-stage:hover { border-color: #3b82f6; color: #1d4ed8; }
+body.light .btn-reset { border-color: #cbd5e1; color: #94a3b8; }
+body.light .btn-reset:hover { border-color: #94a3b8; color: #475569; }
+body.light .btn-theme { border-color: #cbd5e1; color: #475569; }
+body.light .btn-launch:disabled { background: #f1f5f9; border-color: #cbd5e1; color: #94a3b8; }
+body.light .result-box { background: #ffffff; }
+body.light .result-details { background: #f8fafc; color: #475569; }
+body.light .rd-header { color: #94a3b8; }
+body.light .rd-calc   { color: #334155; }
+body.light #countdown-overlay .countdown-num { text-shadow: 0 0 60px #3b82f6, 0 0 20px rgba(59,130,246,0.4); }
+
+/* ─── COUNTDOWN ─── */
+#countdown-overlay {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500; pointer-events: none; opacity: 0;
+}
+.countdown-num {
+  font-size: 28vh; font-weight: 700; color: white; line-height: 1;
+  text-shadow: 0 0 60px #3a80d0, 0 0 20px rgba(58,128,208,0.4);
+}
+
+/* ─── RESULT OVERLAY ─── */
+#result-overlay {
+  position: fixed; inset: 0;
+  background: rgba(2,11,24,0.88);
+  display: none; align-items: center; justify-content: center;
+  z-index: 600;
+}
+.result-box {
+  background: #0d1b2e; border: 2px solid;
+  border-radius: 14px; padding: 30px 44px;
+  text-align: center; max-width: 580px; width: 92%;
+}
+.result-box.success { border-color: #22c55e; }
+.result-box.failure { border-color: #ef4444; }
+.result-icon  { font-size: 52px; margin-bottom: 12px; }
+.result-title {
+  font-size: 18px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px;
+}
+.result-box.success .result-title { color: #22c55e; }
+.result-box.failure .result-title { color: #ef4444; }
+.result-details {
+  font-size: 11.5px; color: #64748b; line-height: 1.9;
+  background: rgba(0,0,0,0.3); padding: 12px 16px;
+  border-radius: 6px; margin-bottom: 18px; text-align: left;
+}
+.rd-group { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.rd-group:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.rd-header { font-size: 10px; letter-spacing: 1px; color: #475569; margin-bottom: 4px; text-transform: uppercase; }
+.rd-calc   { font-size: 12px; color: #94a3b8; }
+.rd-calc .v-ok  { color: #22c55e; font-weight: 700; }
+.rd-calc .v-err { color: #ef4444; }
+.rd-hint   { font-size: 10.5px; color: #ef4444; font-style: italic; }
+.btn-close {
+  background: #1e293b; border: 1px solid #334155;
+  color: #94a3b8; font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px;
+  padding: 8px 22px; border-radius: 6px; cursor: pointer;
+}
+.btn-close:hover { border-color: #64748b; color: #e2e8f0; }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-title">▸ Mission Artemis — Launch Control</div>
+  <div class="stage-badge s1" id="stage-badge">PRE-LAUNCH · AWAITING DATA</div>
+  <div class="status-msg" id="status-msg">Awaiting group calculations</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: Groups 1 & 2 -->
+  <div class="side-col">
+
+    <div class="group-card" id="card-0">
+      <div class="g-header">
+        <div class="g-eyebrow">Group 1 · Engineering</div>
+        <div class="g-param">Rocket body height</div>
+      </div>
+      <div class="meas-wrap">
+        <table class="meas-table">
+          <tr>
+            <td class="td-name">Nose section</td>
+            <td class="td-val">8 000</td>
+            <td class="td-unit">mm</td>
+          </tr>
+          <tr>
+            <td class="td-name">Payload bay</td>
+            <td class="td-val">1 200</td>
+            <td class="td-unit">cm</td>
+          </tr>
+          <tr>
+            <td class="td-name">Engine section</td>
+            <td class="td-val">0.025</td>
+            <td class="td-unit">km</td>
+          </tr>
+        </table>
+      </div>
+      <hr class="meas-divider">
+      <div class="g-instruction s1">↑ add the three numbers above</div>
+      <div class="g-instruction s2">↑ convert each to m, then add</div>
+      <div class="g-input-wrap">
+        <div class="g-input-row">
+          <span class="eq-label">Total =</span>
+          <input type="number" id="inp-0" placeholder="?" step="any" oninput="onInput()">
+          <span class="m-label">m</span>
+        </div>
+      </div>
+      <div class="g-status" id="gstat-0"></div>
+    </div>
+
+    <div class="group-card" id="card-1">
+      <div class="g-header">
+        <div class="g-eyebrow">Group 2 · Engineering</div>
+        <div class="g-param">Engine bell diameter</div>
+      </div>
+      <div class="meas-wrap">
+        <table class="meas-table">
+          <tr>
+            <td class="td-name">Inner nozzle</td>
+            <td class="td-val">500</td>
+            <td class="td-unit">mm</td>
+          </tr>
+          <tr>
+            <td class="td-name">Middle ring</td>
+            <td class="td-val">20</td>
+            <td class="td-unit">cm</td>
+          </tr>
+          <tr>
+            <td class="td-name">Outer flange</td>
+            <td class="td-val">100</td>
+            <td class="td-unit">mm</td>
+          </tr>
+        </table>
+      </div>
+      <hr class="meas-divider">
+      <div class="g-instruction s1">↑ add the three numbers above</div>
+      <div class="g-instruction s2">↑ convert each to m, then add</div>
+      <div class="g-input-wrap">
+        <div class="g-input-row">
+          <span class="eq-label">Total =</span>
+          <input type="number" id="inp-1" placeholder="?" step="any" oninput="onInput()">
+          <span class="m-label">m</span>
+        </div>
+      </div>
+      <div class="g-status" id="gstat-1"></div>
+    </div>
+
+  </div>
+
+  <!-- CENTER: ROCKET -->
+  <div class="center-col">
+    <div class="rocket-wrap idle" id="rocket-wrap">
+      <svg class="rocket" width="74" height="190" viewBox="0 0 74 190">
+        <!-- Nosecone -->
+        <polygon points="37,2 14,50 60,50" fill="#dde8f0"/>
+        <polygon points="37,2 14,50 60,50" fill="url(#ng)"/>
+        <!-- Body -->
+        <rect x="14" y="48" width="46" height="116" rx="3" fill="#c0d0e0"/>
+        <rect x="14" y="48" width="46" height="116" rx="3" fill="url(#bg)"/>
+        <!-- Red stripe -->
+        <rect x="14" y="84" width="46" height="13" fill="#dc2626"/>
+        <!-- Window -->
+        <circle cx="37" cy="68" r="10" fill="#1e3a5f" stroke="#60a5fa" stroke-width="2"/>
+        <circle cx="34" cy="65" r="3"  fill="rgba(255,255,255,0.35)"/>
+        <!-- Left fin -->
+        <polygon points="14,142 0,176 14,168" fill="#8ca0b0"/>
+        <polygon points="14,142 0,176 14,168" fill="url(#fg1)"/>
+        <!-- Right fin -->
+        <polygon points="60,142 74,176 60,168" fill="#8ca0b0"/>
+        <polygon points="60,142 74,176 60,168" fill="url(#fg2)"/>
+        <!-- Nozzle -->
+        <rect x="24" y="164" width="26" height="20" rx="3" fill="#475569"/>
+        <rect x="28" y="166" width="18" height="16" rx="2" fill="#1e293b"/>
+        <ellipse cx="37" cy="184" rx="11" ry="3.5" fill="#334155"/>
+        <defs>
+          <linearGradient id="ng" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="rgba(0,0,0,0.18)"/>
+            <stop offset="1" stop-color="rgba(255,255,255,0.08)"/>
+          </linearGradient>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0"   stop-color="rgba(0,0,0,0.22)"/>
+            <stop offset="0.4" stop-color="rgba(255,255,255,0.1)"/>
+            <stop offset="1"   stop-color="rgba(0,0,0,0.18)"/>
+          </linearGradient>
+          <linearGradient id="fg1" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="rgba(0,0,0,0.25)"/>
+            <stop offset="1" stop-color="rgba(255,255,255,0.04)"/>
+          </linearGradient>
+          <linearGradient id="fg2" x1="1" y1="0" x2="0" y2="0">
+            <stop offset="0" stop-color="rgba(0,0,0,0.25)"/>
+            <stop offset="1" stop-color="rgba(255,255,255,0.04)"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="flame-group" id="flames">
+        <div class="flame"></div>
+        <div class="flame"></div>
+        <div class="flame"></div>
+      </div>
+    </div>
+    <canvas id="explosion-canvas"></canvas>
+    <div class="ground"></div>
+  </div>
+
+  <!-- RIGHT: Groups 3 & 4 -->
+  <div class="side-col">
+
+    <div class="group-card" id="card-2">
+      <div class="g-header">
+        <div class="g-eyebrow">Group 3 · Mission Control</div>
+        <div class="g-param">Launch pad clearance</div>
+      </div>
+      <div class="meas-wrap">
+        <table class="meas-table">
+          <tr>
+            <td class="td-name">Support base</td>
+            <td class="td-val">1 000</td>
+            <td class="td-unit">cm</td>
+          </tr>
+          <tr>
+            <td class="td-name">Main frame</td>
+            <td class="td-val">0.03</td>
+            <td class="td-unit">km</td>
+          </tr>
+          <tr>
+            <td class="td-name">Safety buffer</td>
+            <td class="td-val">10 000</td>
+            <td class="td-unit">mm</td>
+          </tr>
+        </table>
+      </div>
+      <hr class="meas-divider">
+      <div class="g-instruction s1">↑ add the three numbers above</div>
+      <div class="g-instruction s2">↑ convert each to m, then add</div>
+      <div class="g-input-wrap">
+        <div class="g-input-row">
+          <span class="eq-label">Total =</span>
+          <input type="number" id="inp-2" placeholder="?" step="any" oninput="onInput()">
+          <span class="m-label">m</span>
+        </div>
+      </div>
+      <div class="g-status" id="gstat-2"></div>
+    </div>
+
+    <div class="group-card" id="card-3">
+      <div class="g-header">
+        <div class="g-eyebrow">Group 4 · Mission Control</div>
+        <div class="g-param">Antenna total height</div>
+      </div>
+      <div class="meas-wrap">
+        <table class="meas-table">
+          <tr>
+            <td class="td-name">Base mount</td>
+            <td class="td-val">150</td>
+            <td class="td-unit">cm</td>
+          </tr>
+          <tr>
+            <td class="td-name">Main mast</td>
+            <td class="td-val">1 200</td>
+            <td class="td-unit">mm</td>
+          </tr>
+          <tr>
+            <td class="td-name">Tip element</td>
+            <td class="td-val">30</td>
+            <td class="td-unit">cm</td>
+          </tr>
+        </table>
+      </div>
+      <hr class="meas-divider">
+      <div class="g-instruction s1">↑ add the three numbers above</div>
+      <div class="g-instruction s2">↑ convert each to m, then add</div>
+      <div class="g-input-wrap">
+        <div class="g-input-row">
+          <span class="eq-label">Total =</span>
+          <input type="number" id="inp-3" placeholder="?" step="any" oninput="onInput()">
+          <span class="m-label">m</span>
+        </div>
+      </div>
+      <div class="g-status" id="gstat-3"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottombar">
+  <button class="btn btn-stage" onclick="toggleStage()">Sync Full Spec</button>
+  <button class="btn btn-launch" id="btn-launch" onclick="startLaunch()">Initiate Launch</button>
+  <button class="btn btn-reset"  onclick="resetAll()">Reset</button>
+  <button class="btn btn-theme"  id="btn-theme" onclick="toggleTheme()" style="border-color:#334155;color:#64748b">☀ Light</button>
+</div>
+
+<!-- COUNTDOWN -->
+<div id="countdown-overlay">
+  <div class="countdown-num" id="countdown-num">3</div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div id="result-overlay">
+  <div class="result-box" id="result-box">
+    <div class="result-icon"  id="result-icon"></div>
+    <div class="result-title" id="result-title"></div>
+    <div class="result-details" id="result-details"></div>
+    <button class="btn-close" onclick="closeResult()">Close</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════ DATA ═══════════════ */
+const GROUPS = [
+  {
+    label: 'Rocket body height',
+    rows: [
+      { name:'Nose section',   val:'8 000', unit:'mm', metres: 8    },
+      { name:'Payload bay',    val:'1 200', unit:'cm', metres: 12   },
+      { name:'Engine section', val:'0.025', unit:'km', metres: 25   },
+    ],
+    correctM: 45,
+    s1Sum: '8 000 + 1 200 + 0.025 = 9 200',
+    s1Hint: '9 200 m rocket — taller than the cruising altitude of a plane',
+    s2Calc: '8 + 12 + 25 = 45 m',
+  },
+  {
+    label: 'Engine bell diameter',
+    rows: [
+      { name:'Inner nozzle', val:'500', unit:'mm', metres: 0.5  },
+      { name:'Middle ring',  val:'20',  unit:'cm', metres: 0.2  },
+      { name:'Outer flange', val:'100', unit:'mm', metres: 0.1  },
+    ],
+    correctM: 0.8,
+    s1Sum: '500 + 20 + 100 = 620',
+    s1Hint: '620 m engine — wider than 6 football pitches',
+    s2Calc: '0.5 + 0.2 + 0.1 = 0.8 m',
+  },
+  {
+    label: 'Launch pad clearance',
+    rows: [
+      { name:'Support base',  val:'1 000',  unit:'cm', metres: 10  },
+      { name:'Main frame',    val:'0.03',   unit:'km', metres: 30  },
+      { name:'Safety buffer', val:'10 000', unit:'mm', metres: 10  },
+    ],
+    correctM: 50,
+    s1Sum: '1 000 + 0.03 + 10 000 = 11 000',
+    s1Hint: '11 000 m clearance — the launch pad is taller than a mountain',
+    s2Calc: '10 + 30 + 10 = 50 m',
+  },
+  {
+    label: 'Antenna total height',
+    rows: [
+      { name:'Base mount',  val:'150',   unit:'cm', metres: 1.5  },
+      { name:'Main mast',   val:'1 200', unit:'mm', metres: 1.2  },
+      { name:'Tip element', val:'30',    unit:'cm', metres: 0.3  },
+    ],
+    correctM: 3,
+    s1Sum: '150 + 1 200 + 30 = 1 380',
+    s1Hint: '1 380 m antenna — taller than any building ever built',
+    s2Calc: '1.5 + 1.2 + 0.3 = 3 m',
+  },
+];
+
+const TOL = 0.02;  // 2% tolerance
+let stage = 1;
+let launched = false;
+
+/* ═══════════════ STARS ═══════════════ */
+(function() {
+  const c = document.getElementById('starfield');
+  const ctx = c.getContext('2d');
+  let stars = [];
+  function resize() {
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    stars = Array.from({length:180}, () => ({
+      x: Math.random()*c.width, y: Math.random()*c.height,
+      r: Math.random()*1.1+0.3,
+      sp: Math.random()*0.15+0.04,
+      ph: Math.random()*Math.PI*2,
+    }));
+  }
+  function draw(t) {
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(s => {
+      const a = 0.35 + 0.55*Math.sin(t*0.001*s.sp*12+s.ph);
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(200,220,255,${a})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', resize);
+  resize(); requestAnimationFrame(draw);
+})();
+
+/* ═══════════════ INPUT ═══════════════ */
+function onInput() {
+  GROUPS.forEach((_,i) => {
+    document.getElementById(`card-${i}`).classList.remove('correct','incorrect');
+    const s = document.getElementById(`gstat-${i}`);
+    s.textContent = ''; s.className = 'g-status';
+  });
+}
+
+function allFilled() {
+  return GROUPS.every((_,i) => document.getElementById(`inp-${i}`).value.trim() !== '');
+}
+
+function checkValues() {
+  return GROUPS.map((g,i) => {
+    const v = parseFloat(document.getElementById(`inp-${i}`).value);
+    return !isNaN(v) && Math.abs(v - g.correctM)/g.correctM < TOL;
+  });
+}
+
+/* ═══════════════ STAGE TOGGLE ═══════════════ */
+function toggleStage() {
+  if (launched) return;
+  stage = stage === 1 ? 2 : 1;
+  applyStage();
+  resetInputs();
+}
+
+function applyStage() {
+  const badge = document.getElementById('stage-badge');
+  const btn   = document.querySelector('.btn-stage');
+  if (stage === 1) {
+    badge.textContent = 'PRE-LAUNCH · AWAITING DATA';
+    badge.className = 'stage-badge s1';
+    btn.textContent = 'Sync Full Spec';
+    document.body.classList.remove('stage2');
+    document.getElementById('status-msg').textContent = 'Awaiting group calculations';
+  } else {
+    badge.textContent = 'FULL SPEC RECEIVED';
+    badge.className = 'stage-badge s2';
+    btn.textContent = 'Reset Data Feed';
+    document.body.classList.add('stage2');
+    document.getElementById('status-msg').textContent = 'Specifications updated — recalculate';
+  }
+}
+
+/* ═══════════════ LAUNCH ═══════════════ */
+function startLaunch() {
+  if (launched) return;
+  if (!allFilled()) {
+    document.getElementById('status-msg').textContent = 'All groups must enter a total';
+    return;
+  }
+  launched = true;
+  document.getElementById('btn-launch').disabled = true;
+  setInputsDisabled(true);
+
+  const results = checkValues();
+  countdown(3, () => results.every(Boolean) ? doLaunch() : doFailure(results));
+}
+
+function countdown(n, cb) {
+  const ov = document.getElementById('countdown-overlay');
+  const nm = document.getElementById('countdown-num');
+  let cur = n;
+  function tick() {
+    nm.textContent = cur === 0 ? '🚀' : cur;
+    ov.style.transition = 'opacity 0s'; ov.style.opacity = '1';
+    setTimeout(() => { ov.style.transition = 'opacity 0.4s'; ov.style.opacity = '0'; }, 700);
+    if (cur > 0) { setTimeout(() => { cur--; tick(); }, 1000); }
+    else { setTimeout(cb, 1100); }
+  }
+  tick();
+}
+
+function doLaunch() {
+  const w = document.getElementById('rocket-wrap');
+  w.classList.remove('idle'); w.classList.add('ignite');
+  setTimeout(() => { w.classList.remove('ignite'); w.classList.add('launching'); }, 900);
+  setTimeout(() => showResult(true, [true,true,true,true]), 3600);
+}
+
+function doFailure(results) {
+  results.forEach((ok,i) => {
+    const c2 = document.getElementById(`card-${i}`);
+    const st = document.getElementById(`gstat-${i}`);
+    c2.classList.add(ok ? 'correct' : 'incorrect');
+    st.className = 'g-status ' + (ok ? 'ok' : 'err');
+    st.textContent = ok ? '✓ Correct' : '✗ Wrong total';
+  });
+  const w = document.getElementById('rocket-wrap');
+  w.classList.remove('idle');
+  document.getElementById('flames').style.opacity = '0.5';
+  setTimeout(() => {
+    w.classList.add('failing');
+    document.getElementById('flames').style.opacity = '0';
+    playExplosion();
+  }, 600);
+  setTimeout(() => showResult(false, results), 2400);
+}
+
+/* ═══════════════ EXPLOSION ═══════════════ */
+function playExplosion() {
+  const canvas = document.getElementById('explosion-canvas');
+  canvas.style.display = 'block';
+  canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+  const ctx = canvas.getContext('2d');
+  const cx = canvas.width/2 + 65, cy = canvas.height - 55;
+  const pts = Array.from({length:45}, () => ({
+    x: cx, y: cy,
+    vx: (Math.random()-0.5)*9, vy: -(Math.random()*9+2),
+    r: Math.random()*9+4,
+    color: `hsl(${Math.random()*40+8},100%,${50+Math.random()*20}%)`,
+    life: 1, decay: Math.random()*0.022+0.012,
+  }));
+  function frame() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive = false;
+    pts.forEach(p => {
+      if (p.life <= 0) return;
+      alive = true; p.x += p.vx; p.y += p.vy; p.vy += 0.28; p.life -= p.decay;
+      ctx.globalAlpha = Math.max(0,p.life);
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = p.color; ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    if (alive) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ═══════════════ RESULT ═══════════════ */
+function showResult(success, results) {
+  const ov = document.getElementById('result-overlay');
+  const bx = document.getElementById('result-box');
+  document.getElementById('result-icon').textContent  = success ? '🚀' : '💥';
+  document.getElementById('result-title').textContent = success ? 'Launch Successful' : 'Mission Failure — Unit Mismatch Detected';
+  bx.className = 'result-box ' + (success ? 'success' : 'failure');
+
+  const det = document.getElementById('result-details');
+  if (success) {
+    det.innerHTML = GROUPS.map(g =>
+      `<div class="rd-group">
+        <div class="rd-header">${g.label}</div>
+        <div class="rd-calc">${g.s2Calc} <span class="v-ok">✓</span></div>
+      </div>`
+    ).join('');
+  } else {
+    det.innerHTML = GROUPS.map((g,i) => {
+      const v = parseFloat(document.getElementById(`inp-${i}`).value);
+      if (results[i]) {
+        return `<div class="rd-group">
+          <div class="rd-header">${g.label}</div>
+          <div class="rd-calc">${g.s2Calc} <span class="v-ok">✓</span></div>
+        </div>`;
+      }
+      const entered = isNaN(v) ? '—' : v;
+      return `<div class="rd-group">
+        <div class="rd-header">${g.label}</div>
+        <div class="rd-calc">Your total: <span class="v-err">${entered} m</span>
+          &nbsp;|&nbsp; Correct: <span class="v-ok">${g.correctM} m</span></div>
+        <div class="rd-calc" style="color:#475569;font-size:10.5px">Raw sum: ${g.s1Sum}</div>
+        <div class="rd-hint">⚠ ${g.s1Hint}</div>
+      </div>`;
+    }).join('');
+  }
+  ov.style.display = 'flex';
+}
+
+function closeResult() {
+  document.getElementById('result-overlay').style.display = 'none';
+}
+
+/* ═══════════════ RESET ═══════════════ */
+function resetAll() {
+  launched = false;
+  document.getElementById('btn-launch').disabled = false;
+  setInputsDisabled(false);
+  resetInputs();
+  const w = document.getElementById('rocket-wrap');
+  w.style.transition = 'none'; w.className = 'rocket-wrap idle';
+  void w.offsetWidth;
+  document.getElementById('flames').style.opacity = '';
+  const ec = document.getElementById('explosion-canvas');
+  ec.style.display = 'none';
+  ec.getContext('2d').clearRect(0, 0, ec.width, ec.height);
+  document.getElementById('countdown-overlay').style.opacity = '0';
+  document.getElementById('result-overlay').style.display = 'none';
+  document.getElementById('status-msg').textContent = 'Awaiting group calculations';
+}
+
+function resetInputs() {
+  GROUPS.forEach((_,i) => {
+    document.getElementById(`inp-${i}`).value = '';
+    document.getElementById(`card-${i}`).classList.remove('correct','incorrect');
+    const s = document.getElementById(`gstat-${i}`); s.textContent = ''; s.className = 'g-status';
+  });
+}
+
+function setInputsDisabled(d) {
+  GROUPS.forEach((_,i) => { document.getElementById(`inp-${i}`).disabled = d; });
+}
+
+function toggleTheme() {
+  const light = document.body.classList.toggle('light');
+  document.getElementById('btn-theme').textContent = light ? '🌙 Dark' : '☀ Light';
+}
+
+applyStage();
+</script>
+</body>
+</html>

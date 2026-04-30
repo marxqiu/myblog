@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 8 Hook — The Crow &amp; the Pebbles</title>
+<script>
+  MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] } };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f1ea;
+    --paper: #fbf8f2;
+    --ink: #1f2a33;
+    --muted: #6b7a85;
+    --line: #d8cfbf;
+    --accent: #2f6b4f;
+    --accent-soft: #d6ead9;
+    --warn: #b5651d;
+    --water: #3f9ad8;
+    --water-dark: #2478b8;
+    --pebble: #5a6268;
+    --pebble-dark: #3d434a;
+    --glass: rgba(220,235,242,0.55);
+  }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 22px 18px 48px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    width: min(1120px, 100%);
+  }
+
+  header.masthead {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 6px rgba(30,30,30,0.04);
+  }
+  .badge {
+    font-family: 'Georgia', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 1.6rem;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+  .subtitle {
+    font-size: 0.92rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  main.layout {
+    display: grid;
+    grid-template-columns: minmax(340px, 440px) minmax(360px, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(30,30,30,0.04);
+    padding: 18px 20px;
+  }
+
+  /* ── STAGE (bottle SVG) ── */
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .stage svg {
+    width: 100%;
+    max-width: 360px;
+    height: auto;
+    display: block;
+  }
+  .readouts {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .readout {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .readout .label {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .readout .value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .readout .unit {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-left: 2px;
+  }
+  .readout.target { background: var(--accent-soft); border-color: var(--accent); }
+  .readout.target .value { color: var(--accent); }
+
+  .status-banner {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    text-align: center;
+    border: 1px dashed var(--line);
+    color: var(--muted);
+    background: #fff;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .status-banner.drink {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .status-banner.close {
+    background: #fff6e6;
+    border: 1px solid #d9a54a;
+    color: #8a5a18;
+  }
+
+  /* ── PANEL ── */
+  .panel-section {
+    margin-bottom: 18px;
+  }
+  .panel-section:last-child { margin-bottom: 0; }
+  .panel-section h2 {
+    font-size: 1.0rem;
+    color: var(--ink);
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 4px;
+    letter-spacing: 0.02em;
+  }
+
+  .problem-box {
+    background: #fdfaf1;
+    border-left: 3px solid var(--warn);
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+  .problem-box .q {
+    display: block;
+    margin-top: 8px;
+    font-weight: 600;
+    color: var(--warn);
+  }
+
+  .prompts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .q-btn {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    color: var(--ink);
+    transition: 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .q-btn:hover { background: #f4efe4; }
+  .q-btn.open { background: var(--accent-soft); border-color: var(--accent); }
+  .q-btn .chev {
+    color: var(--muted);
+    font-size: 0.8rem;
+    transition: 0.15s;
+  }
+  .q-btn.open .chev { transform: rotate(90deg); color: var(--accent); }
+  .q-ans {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    font-size: 0.88rem;
+    color: var(--ink);
+    background: #fff;
+    border-left: 2px solid var(--accent);
+    margin-left: 8px;
+  }
+  .q-ans.open {
+    max-height: 200px;
+    padding: 8px 12px;
+    margin-top: 0px;
+    margin-bottom: 2px;
+  }
+
+  .predict-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .predict-row label {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .predict-row input[type="number"] {
+    width: 72px;
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    text-align: center;
+  }
+  .predict-row input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+  .predict-note {
+    margin-top: 6px;
+    font-size: 0.86rem;
+    color: var(--muted);
+    min-height: 20px;
+  }
+  .predict-note.hit { color: var(--accent); font-weight: 600; }
+  .predict-note.miss { color: var(--warn); }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  button.action {
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 9px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: 0.15s;
+    letter-spacing: 0.02em;
+  }
+  button.action:hover { background: #245a41; }
+  button.action.ghost {
+    background: #fff;
+    color: var(--accent);
+  }
+  button.action.ghost:hover { background: var(--accent-soft); }
+  button.action.muted {
+    background: #fff;
+    color: var(--muted);
+    border-color: var(--line);
+  }
+  button.action.muted:hover { background: #f4efe4; }
+  button.action:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .reveal-box {
+    background: #f7f3e7;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    display: none;
+  }
+  .reveal-box.open { display: block; }
+  .reveal-box .step {
+    margin-bottom: 6px;
+  }
+  .reveal-box .step strong {
+    color: var(--accent);
+  }
+  .reveal-box .final {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* responsive */
+  @media (max-width: 800px) {
+    main.layout { grid-template-columns: 1fr; }
+  }
+
+  /* pebble drop animation */
+  @keyframes splash {
+    0% { r: 0; opacity: 0.7; }
+    100% { r: 14; opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="masthead">
+    <div class="badge">Grade 7 · Chapter 12 · Lesson 8 · Hook</div>
+    <h1>The Crow <em>&amp;</em> the Pebbles</h1>
+    <p class="subtitle">Capacity is just the internal volume of a container — expressed in liquid units.</p>
+  </header>
+
+  <main class="layout">
+
+    <!-- ─── LEFT: VISUAL STAGE ─── -->
+    <section class="card stage">
+      <svg id="scene" viewBox="0 0 320 440" aria-label="Crow and bottle">
+        <defs>
+          <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#e3edf1" stop-opacity="0.8"/>
+            <stop offset="50%" stop-color="#f6fbfc" stop-opacity="0.4"/>
+            <stop offset="100%" stop-color="#c9d8de" stop-opacity="0.8"/>
+          </linearGradient>
+          <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#66b6e2"/>
+            <stop offset="100%" stop-color="#2478b8"/>
+          </linearGradient>
+          <radialGradient id="pebbleGrad" cx="0.3" cy="0.3" r="0.8">
+            <stop offset="0%" stop-color="#8a929a"/>
+            <stop offset="100%" stop-color="#3d434a"/>
+          </radialGradient>
+          <clipPath id="bottleClip">
+            <path d="M 112 110
+                     L 112 340
+                     Q 112 360 132 360
+                     L 188 360
+                     Q 208 360 208 340
+                     L 208 110
+                     Z"/>
+          </clipPath>
+        </defs>
+
+        <!-- table / ground -->
+        <rect x="30" y="385" width="260" height="35" fill="#c9b890" opacity="0.45"/>
+        <line x1="30" y1="385" x2="290" y2="385" stroke="#8a7a56" stroke-width="1" opacity="0.5"/>
+
+        <!-- bottle shadow -->
+        <ellipse cx="160" cy="385" rx="60" ry="6" fill="#000" opacity="0.13"/>
+
+        <!-- crow -->
+        <g id="crow" transform="translate(160, 62)">
+          <!-- body -->
+          <ellipse cx="0" cy="0" rx="26" ry="18" fill="#1a1a1e"/>
+          <!-- head -->
+          <circle cx="-22" cy="-8" r="12" fill="#1a1a1e"/>
+          <!-- beak -->
+          <polygon points="-34,-8 -46,-5 -34,-3" fill="#d4a04a"/>
+          <!-- eye -->
+          <circle cx="-26" cy="-11" r="2" fill="#fff"/>
+          <circle cx="-26" cy="-11" r="1" fill="#000"/>
+          <!-- wing -->
+          <path d="M -5 -5 Q 10 -12 22 -2 Q 18 6 0 6 Z" fill="#2a2a30"/>
+          <!-- tail -->
+          <polygon points="22,0 36,-4 36,4" fill="#1a1a1e"/>
+          <!-- legs -->
+          <line x1="-8" y1="17" x2="-8" y2="28" stroke="#d4a04a" stroke-width="1.5"/>
+          <line x1="6" y1="17" x2="6" y2="28" stroke="#d4a04a" stroke-width="1.5"/>
+        </g>
+
+        <!-- bottle neck -->
+        <rect x="136" y="95" width="48" height="22" rx="2" fill="url(#glassGrad)" stroke="#9fb3b8" stroke-width="1.2"/>
+
+        <!-- bottle body (outline) -->
+        <path d="M 112 110
+                 L 112 340
+                 Q 112 360 132 360
+                 L 188 360
+                 Q 208 360 208 340
+                 L 208 110"
+              fill="url(#glassGrad)"
+              stroke="#9fb3b8"
+              stroke-width="1.5"/>
+
+        <!-- water + pebbles (clipped to bottle interior) -->
+        <g clip-path="url(#bottleClip)">
+          <!-- pebbles go here (inserted by JS) -->
+          <g id="pebbles"></g>
+          <!-- water fills on top of pebbles -->
+          <rect id="water" x="112" y="280" width="96" height="60" fill="url(#waterGrad)" opacity="0.82"/>
+          <!-- water surface shimmer -->
+          <line id="waterline" x1="112" y1="280" x2="208" y2="280" stroke="#fff" stroke-width="1" opacity="0.55"/>
+          <!-- splash marker -->
+          <circle id="splash" cx="160" cy="280" r="0" fill="none" stroke="#fff" stroke-width="2" opacity="0"/>
+        </g>
+
+        <!-- ruler marks (only the meaningful ones) -->
+        <g id="ruler" font-family="Georgia" font-size="10" fill="#6b7a85">
+          <!-- 5 cm line (starting water level) -->
+          <line x1="96" y1="280" x2="108" y2="280" stroke="#6b7a85" stroke-width="1"/>
+          <text x="76" y="284">5 cm</text>
+          <!-- brim line (target = bottle full) -->
+          <line x1="88" y1="111" x2="112" y2="111" stroke="#2f6b4f" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <text x="48" y="115" fill="#2f6b4f" font-weight="bold">full ←</text>
+        </g>
+      </svg>
+
+      <div class="readouts">
+        <div class="readout">
+          <div class="label">Water height</div>
+          <div><span id="h-now" class="value">5.00</span><span class="unit">cm</span></div>
+        </div>
+        <div class="readout target">
+          <div class="label">Pebbles</div>
+          <div><span id="p-now" class="value">0</span></div>
+        </div>
+      </div>
+
+      <div class="status-banner" id="status">The bottle is not full yet. The crow cannot drink.</div>
+    </section>
+
+    <!-- ─── RIGHT: STORY + CONTROLS ─── -->
+    <section class="card">
+
+      <div class="panel-section">
+        <h2>① The Problem</h2>
+        <div class="problem-box">
+          A crow finds water in a bottle with capacity $1\text{ L}$.
+          The bottle has base radius $4\text{ cm}$.
+          The water is $5\text{ cm}$ deep now.
+          The crow can only drink when the bottle is full.
+          Each pebble dropped into the bottle displaces $25\text{ cm}^3$ of water.
+          <span class="q">How many pebbles are needed?</span>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h2>② Three things to notice</h2>
+        <div class="prompts">
+          <button class="q-btn" data-q="1">
+            <span>What tells you the <em>size of the bottle</em>?</span>
+            <span class="chev">▸</span>
+          </button>
+          <div class="q-ans" id="a1">Its <b>capacity</b> ($1\text{ L}$) and its <b>radius</b> ($4\text{ cm}$).</div>
+
+          <button class="q-btn" data-q="2">
+            <span>What tells you <em>how much water is there now</em>?</span>
+            <span class="chev">▸</span>
+          </button>
+          <div class="q-ans" id="a2">The <b>5 cm depth</b>. Combined with the radius, this gives the current water volume.</div>
+
+          <button class="q-btn" data-q="3">
+            <span>What does <em>one pebble</em> do?</span>
+            <span class="chev">▸</span>
+          </button>
+          <div class="q-ans" id="a3">Each pebble displaces $25\text{ cm}^3$ of water — that is, it pushes $25\text{ cm}^3$ of water upward. Pebbles don't create water; they take its place.</div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h2>③ Predict before you drop</h2>
+        <div class="predict-row">
+          <label>Your guess:</label>
+          <input type="number" id="guess" min="1" max="50" placeholder="?">
+          <span>pebbles</span>
+          <button class="action ghost" id="lock">Lock in</button>
+        </div>
+        <div class="predict-note" id="predict-note">Lock in your prediction, then drop pebbles to test it.</div>
+      </div>
+
+      <div class="panel-section">
+        <h2>④ Test it</h2>
+        <div class="controls">
+          <button class="action" id="drop">Drop 1 pebble</button>
+          <button class="action ghost" id="drop5">Drop 5</button>
+          <button class="action muted" id="reset">Reset</button>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h2>⑤ The mathematics</h2>
+        <div class="reveal-box" id="reveal">
+          <div class="step"><strong>Bottle capacity.</strong> $1\text{ L} = 1000\text{ mL} = 1000\text{ cm}^3$</div>
+          <div class="step"><strong>Water at the start.</strong> $V = \pi(4)^2(5) = 80\pi \approx 251\text{ cm}^3$</div>
+          <div class="step"><strong>Volume still to fill.</strong> $1000 - 80\pi \approx 749\text{ cm}^3$</div>
+          <div class="step"><strong>Number of pebbles.</strong> $\dfrac{749}{25} \approx 29.95$, so round up to $30$.</div>
+          <div class="final">The crow needs <b>30 pebbles</b> to fill the bottle. Notice how $1\text{ L}$ and $1000\text{ cm}^3$ describe the same space — one in liquid units, one in cubic units.</div>
+        </div>
+        <button class="action ghost" id="show-math" style="margin-top:6px;">Show the working</button>
+      </div>
+
+    </section>
+  </main>
+</div>
+
+<script>
+// ─── constants (all in cm or cm³) ───
+const R = 4;
+const AREA = Math.PI * R * R;          // 16π cm²
+const PEBBLE_V = 25;                    // cm³ of water displaced per pebble
+const CAPACITY = 1000;                  // cm³ = 1 L
+const START_H = 5;
+const START_V = AREA * START_H;         // 80π ≈ 251.33 cm³
+const H_BRIM = CAPACITY / AREA;         // ≈ 19.89 cm (water height when bottle is full)
+// smallest N that fills the bottle (water reaches capacity on the N-th drop)
+const MAX_PEBBLES = Math.ceil((CAPACITY - START_V) / PEBBLE_V);  // = 30
+
+// ─── SVG geometry ───
+const BOTTLE_TOP_Y = 111;      // visual brim (top of bottle body)
+const BOTTLE_BOTTOM_Y = 340;
+const BOTTLE_LEFT_X = 112;
+const BOTTLE_RIGHT_X = 208;
+const BOTTLE_WIDTH = BOTTLE_RIGHT_X - BOTTLE_LEFT_X;
+const PX_PER_CM = (BOTTLE_BOTTOM_Y - BOTTLE_TOP_Y) / H_BRIM;
+
+function cmToY(cm) {
+  return BOTTLE_BOTTOM_Y - cm * PX_PER_CM;
+}
+
+// ─── state ───
+let pebbles = 0;
+let guess = null;
+let guessLocked = false;
+
+const $ = id => document.getElementById(id);
+const water = $('water');
+const waterline = $('waterline');
+const pebblesG = $('pebbles');
+const splash = $('splash');
+
+// ─── render ───
+function render() {
+  // water volume grows by PEBBLE_V per pebble, clamped at capacity
+  const vRaw = START_V + pebbles * PEBBLE_V;
+  const v = Math.min(vRaw, CAPACITY);
+  const h = Math.min(v / AREA, H_BRIM);
+  const waterTopY = cmToY(h);
+  const waterHeight = BOTTLE_BOTTOM_Y - waterTopY;
+
+  water.setAttribute('y', waterTopY);
+  water.setAttribute('height', waterHeight);
+  waterline.setAttribute('y1', waterTopY);
+  waterline.setAttribute('y2', waterTopY);
+
+  $('h-now').textContent = h.toFixed(2);
+  $('p-now').textContent = pebbles;
+
+  const status = $('status');
+  status.classList.remove('drink','close');
+  const full = v >= CAPACITY;
+  if (full) {
+    status.textContent = 'The bottle is full — the crow can drink!';
+    status.classList.add('drink');
+    animateCrowDrink();
+  } else {
+    status.textContent = 'The bottle is not full yet.';
+  }
+
+  $('drop').disabled = pebbles >= MAX_PEBBLES;
+  $('drop5').disabled = pebbles >= MAX_PEBBLES;
+
+  if (guessLocked) updatePredictionFeedback();
+}
+
+// ─── crow animation when water reaches 12 cm ───
+let crowDrunk = false;
+function animateCrowDrink() {
+  if (crowDrunk) return;
+  crowDrunk = true;
+  const crow = $('crow');
+  crow.style.transition = 'transform 0.6s ease';
+  crow.style.transform = 'translate(160px, 62px) rotate(-12deg)';
+  setTimeout(() => {
+    crow.style.transform = 'translate(160px, 62px) rotate(0deg)';
+  }, 700);
+}
+
+// ─── pebble visuals ───
+function addPebbleVisual() {
+  const cx = BOTTLE_LEFT_X + 10 + Math.random() * (BOTTLE_WIDTH - 20);
+  // 30 pebbles piled ~5 per row; rows 6 px tall to keep everything below the brim
+  const perRow = 5;
+  const row = Math.floor(pebbles / perRow);
+  const cy = BOTTLE_BOTTOM_Y - 7 - row * 6 - Math.random() * 3;
+  const rPeb = 5 + Math.random() * 2;
+
+  const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c.setAttribute('cx', cx);
+  c.setAttribute('cy', cy - 80); // start above water
+  c.setAttribute('r', rPeb);
+  c.setAttribute('fill', 'url(#pebbleGrad)');
+  c.setAttribute('opacity', '0.95');
+  pebblesG.appendChild(c);
+
+  // drop animation
+  c.animate([
+    { cy: cy - 160, opacity: 0.2 },
+    { cy: cy, opacity: 0.95 }
+  ], { duration: 380, easing: 'cubic-bezier(.5,.1,.7,1)', fill: 'forwards' });
+  setTimeout(() => c.setAttribute('cy', cy), 380);
+
+  // splash
+  setTimeout(() => {
+    const v = Math.min(START_V + pebbles * PEBBLE_V, CAPACITY);
+    const sy = cmToY(Math.min(v / AREA, H_BRIM));
+    splash.setAttribute('cx', cx);
+    splash.setAttribute('cy', sy);
+    splash.setAttribute('r', 2);
+    splash.setAttribute('opacity', 0.7);
+    splash.animate([
+      { r: 2, opacity: 0.7 },
+      { r: 18, opacity: 0 }
+    ], { duration: 500, easing: 'ease-out' });
+  }, 380);
+}
+
+function dropPebble() {
+  if (pebbles >= MAX_PEBBLES) return;
+  pebbles += 1;
+  addPebbleVisual();
+  setTimeout(render, 240);
+}
+
+function reset() {
+  pebbles = 0;
+  crowDrunk = false;
+  pebblesG.innerHTML = '';
+  render();
+}
+
+// ─── question reveals ───
+document.querySelectorAll('.q-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = 'a' + btn.dataset.q;
+    const ans = document.getElementById(id);
+    const open = ans.classList.toggle('open');
+    btn.classList.toggle('open', open);
+  });
+});
+
+// ─── prediction ───
+$('lock').addEventListener('click', () => {
+  const v = parseInt($('guess').value, 10);
+  if (isNaN(v) || v < 1) {
+    $('predict-note').textContent = 'Enter a positive whole number first.';
+    $('predict-note').className = 'predict-note miss';
+    return;
+  }
+  guess = v;
+  guessLocked = true;
+  $('predict-note').textContent = `Prediction locked: ${guess} pebble${guess === 1 ? '' : 's'}. Now drop to check.`;
+  $('predict-note').className = 'predict-note';
+});
+
+function updatePredictionFeedback() {
+  if (!guessLocked) return;
+  const note = $('predict-note');
+  const v = Math.min(START_V + pebbles * PEBBLE_V, CAPACITY);
+  const full = v >= CAPACITY;
+  if (full && pebbles === guess) {
+    note.textContent = `Exactly right — ${pebbles} pebbles fills the bottle.`;
+    note.className = 'predict-note hit';
+  } else if (full && pebbles !== guess) {
+    note.textContent = `Bottle filled after ${pebbles} pebbles. Your guess was ${guess}.`;
+    note.className = 'predict-note miss';
+  } else if (pebbles >= guess) {
+    note.textContent = `You dropped ${pebbles} — the bottle is not full yet.`;
+    note.className = 'predict-note miss';
+  } else {
+    note.textContent = `Prediction: ${guess} pebbles. Dropped so far: ${pebbles}.`;
+    note.className = 'predict-note';
+  }
+}
+
+// ─── buttons ───
+$('drop').addEventListener('click', dropPebble);
+$('drop5').addEventListener('click', () => {
+  let i = 0;
+  const step = () => {
+    if (i < 5) { dropPebble(); i++; setTimeout(step, 220); }
+  };
+  step();
+});
+$('reset').addEventListener('click', reset);
+$('show-math').addEventListener('click', () => {
+  const rev = $('reveal');
+  const open = rev.classList.toggle('open');
+  $('show-math').textContent = open ? 'Hide the working' : 'Show the working';
+  if (open && window.MathJax) MathJax.typesetPromise([rev]);
+});
+
+// click bottle to drop
+$('scene').addEventListener('click', (e) => {
+  const svg = $('scene');
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  const { x, y } = pt.matrixTransform(svg.getScreenCTM().inverse());
+  if (x > BOTTLE_LEFT_X - 10 && x < BOTTLE_RIGHT_X + 10 && y < BOTTLE_TOP_Y + 20) {
+    dropPebble();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

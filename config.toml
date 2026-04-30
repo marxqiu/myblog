@@ -20,17 +20,25 @@ posts = "/posts/:year/:month/:day/:slug/"
     url = "/en/posts/"
     weight = 3
 [[menu.en]]
+    name = "Teaching Resources"
+    url = "/teaching-resources/"
+    weight = 4
+[[menu.en]]
     name = "中文"
     url = "/cn/posts/"
-    weight = 4
+    weight = 5
 [[menu.cn]]
     name = "日志"
     url = "/cn/posts/"
     weight = 2
 [[menu.cn]]
+    name = "教学资源"
+    url = "/teaching-resources/"
+    weight = 3
+[[menu.cn]]
     name = "English"
     url = "/"
-    weight = 3
+    weight = 4
 
 [params]
     description = "Personal website of Yuchen Qiu"

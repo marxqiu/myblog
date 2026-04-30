@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Archimedes' π — Polygon Bounds Explorer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #f0f4f8;
+    color: #1e293b;
+    font-family: 'Georgia', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 20px 48px;
+  }
+
+  header { text-align: center; margin-bottom: 26px; }
+  header h1 { font-size: 1.3rem; color: #1e293b; letter-spacing: 0.03em; margin-bottom: 4px; }
+  header p  { font-size: 0.82rem; color: #64748b; }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 980px;
+  }
+
+  /* ── Canvas ── */
+  #canvas {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    display: block;
+  }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: #64748b;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot  { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Controls ── */
+  .controls {
+    flex: 1;
+    min-width: 272px;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  /* Slider */
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .slider-header span { font-size: 0.83rem; color: #64748b; }
+  .n-value {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #2563eb;
+    font-family: 'Courier New', monospace;
+    line-height: 1;
+  }
+
+  input[type=range] { width: 100%; accent-color: #2563eb; cursor: pointer; }
+
+  .presets {
+    display: flex;
+    gap: 7px;
+    margin-top: 11px;
+    flex-wrap: wrap;
+  }
+  .preset-btn {
+    background: #f1f5f9;
+    border: 1.5px solid #cbd5e1;
+    color: #475569;
+    border-radius: 7px;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    font-family: 'Georgia', serif;
+  }
+  .preset-btn:hover { background: #e2e8f0; }
+  .preset-btn.active { background: #dbeafe; border-color: #2563eb; color: #1d4ed8; }
+
+  /* Bounds */
+  .bound-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .bound-row:last-child { border-bottom: none; }
+
+  .bound-lbl       { font-size: 0.81rem; color: #64748b; }
+  .bound-lbl small { font-size: 0.72rem; color: #94a3b8; display: block; margin-top: 1px; }
+  .bound-val       { font-family: 'Courier New', monospace; font-size: 1.15rem; font-weight: bold; }
+  .col-lower  { color: #16a34a; }
+  .col-pi     { color: #d97706; }
+  .col-upper  { color: #dc2626; }
+
+  .inequality {
+    text-align: center;
+    font-size: 0.92rem;
+    color: #64748b;
+    margin: 12px 0 8px;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Gap bar */
+  .gap-bar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+    height: 7px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .gap-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #16a34a, #d97706 50%, #dc2626);
+    transition: width 0.3s ease;
+  }
+  .gap-lbl { font-size: 0.74rem; color: #94a3b8; margin-top: 5px; }
+
+  /* Animate button */
+  .anim-btn {
+    width: 100%;
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    color: #2563eb;
+    border-radius: 9px;
+    padding: 11px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: 'Georgia', serif;
+    transition: background 0.12s;
+  }
+  .anim-btn:hover { background: #dbeafe; }
+  .anim-btn.running { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Archimedes' π — Polygon Bounds Explorer</h1>
+  <p>Inscribed and circumscribed regular <em>n</em>-gons squeezing in on π from both sides</p>
+</header>
+
+<div class="layout">
+
+  <!-- Canvas -->
+  <div>
+    <canvas id="canvas" width="430" height="430"></canvas>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#16a34a"></div>
+        Inscribed — lower bound
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#2563eb"></div>
+        Circle
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#dc2626"></div>
+        Circumscribed — upper bound
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+
+    <!-- Slider card -->
+    <div class="card">
+      <div class="slider-header">
+        <span>Number of sides &ensp;<em>n</em></span>
+        <span class="n-value" id="n-display">6</span>
+      </div>
+      <input type="range" id="n-slider" min="3" max="96" value="6" step="1">
+      <div class="presets">
+        <button class="preset-btn" onclick="setN(3)">3</button>
+        <button class="preset-btn" onclick="setN(4)">4</button>
+        <button class="preset-btn active" onclick="setN(6)">6 ★</button>
+        <button class="preset-btn" onclick="setN(12)">12</button>
+        <button class="preset-btn" onclick="setN(24)">24</button>
+        <button class="preset-btn" onclick="setN(48)">48</button>
+        <button class="preset-btn" onclick="setN(96)">96 ★</button>
+      </div>
+    </div>
+
+    <!-- Bounds card -->
+    <div class="card">
+      <div class="bound-row">
+        <div class="bound-lbl">
+          Lower bound
+          <small>inscribed perimeter ÷ d</small>
+        </div>
+        <div class="bound-val col-lower" id="lower-val">3.000000</div>
+      </div>
+      <div class="bound-row">
+        <div class="bound-lbl">
+          True π
+          <small>exact value</small>
+        </div>
+        <div class="bound-val col-pi">3.141593</div>
+      </div>
+      <div class="bound-row">
+        <div class="bound-lbl">
+          Upper bound
+          <small>circumscribed perimeter ÷ d</small>
+        </div>
+        <div class="bound-val col-upper" id="upper-val">3.464102</div>
+      </div>
+
+      <div class="inequality">
+        <span class="col-lower" id="lb-txt">3.0000</span>
+        &nbsp;&lt; π &lt;&nbsp;
+        <span class="col-upper" id="ub-txt">3.4641</span>
+      </div>
+
+      <div class="gap-bar-track">
+        <div class="gap-bar-fill" id="gap-fill" style="width:100%"></div>
+      </div>
+      <div class="gap-lbl">Gap: <strong id="gap-val">0.4641</strong> &ensp;— shrinks toward 0 as <em>n</em> grows</div>
+    </div>
+
+    <!-- Animate button -->
+    <button class="anim-btn" id="anim-btn" onclick="toggleAnim()">▶ &ensp;Watch the bounds converge</button>
+
+
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+const W = 430, H = 430;
+const CX = W / 2, CY = H / 2;
+const R = 162; // circle radius in px
+
+let currentN = 6;
+let animating = false;
+let animTimer = null;
+
+// ── Math ──────────────────────────────────────────────────────────
+function lowerBound(n) { return n * Math.sin(Math.PI / n); }
+function upperBound(n) { return n * Math.tan(Math.PI / n); }
+
+// ── Draw regular n-gon (vertices at given radius from centre) ─────
+function drawNgon(n, r, angleOffset) {
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const a = angleOffset + (2 * Math.PI * i) / n;
+    const x = CX + r * Math.cos(a);
+    const y = CY + r * Math.sin(a);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+// ── Main render ───────────────────────────────────────────────────
+function draw(n) {
+  const lo  = lowerBound(n);
+  const hi  = upperBound(n);
+  const gap = hi - lo;
+  const maxGap = upperBound(3) - lowerBound(3);
+
+  const circumVertexR = R / Math.cos(Math.PI / n);
+  const baseOffset    = -Math.PI / 2;
+  const circumOffset  = baseOffset + Math.PI / n;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // White background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle grid
+  ctx.strokeStyle = '#f1f5f9';
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= W; x += 42) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y <= H; y += 42) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Circumscribed polygon (red, dashed)
+  drawNgon(n, circumVertexR, circumOffset);
+  ctx.save();
+  ctx.setLineDash([6, 5]);
+  ctx.strokeStyle = 'rgba(220,38,38,0.65)';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(220,38,38,0.04)';
+  ctx.fill();
+  ctx.restore();
+
+  // Circle (blue)
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#2563eb';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(37,99,235,0.05)';
+  ctx.fill();
+
+  // Inscribed polygon (green)
+  drawNgon(n, R, baseOffset);
+  ctx.strokeStyle = 'rgba(22,163,74,0.9)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(22,163,74,0.07)';
+  ctx.fill();
+
+  // Centre dot
+  ctx.beginPath();
+  ctx.arc(CX, CY, 3.5, 0, 2 * Math.PI);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fill();
+
+  // d = 1 label
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '13px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText('d = 1  (r = ½)', CX, CY + R + 22);
+
+  // Update panel
+  document.getElementById('n-display').textContent = n;
+  document.getElementById('lower-val').textContent = lo.toFixed(6);
+  document.getElementById('upper-val').textContent = hi.toFixed(6);
+  document.getElementById('lb-txt').textContent    = lo.toFixed(4);
+  document.getElementById('ub-txt').textContent    = hi.toFixed(4);
+  document.getElementById('gap-val').textContent   = gap.toFixed(6);
+  document.getElementById('gap-fill').style.width  =
+    Math.max(2, (gap / maxGap) * 100).toFixed(1) + '%';
+}
+
+// ── Controls ──────────────────────────────────────────────────────
+function setN(n) {
+  currentN = n;
+  document.getElementById('n-slider').value = n;
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.textContent) === n);
+  });
+  draw(n);
+}
+
+document.getElementById('n-slider').addEventListener('input', function () {
+  currentN = parseInt(this.value);
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.textContent) === currentN);
+  });
+  draw(currentN);
+});
+
+// ── Animation ─────────────────────────────────────────────────────
+function toggleAnim() {
+  animating = !animating;
+  const btn = document.getElementById('anim-btn');
+  if (animating) {
+    btn.textContent = '⏸ &ensp;Pause';
+    btn.innerHTML   = '⏸ &ensp;Pause';
+    btn.classList.add('running');
+    currentN = 3;
+    stepAnim();
+  } else {
+    btn.innerHTML = '▶ &ensp;Watch the bounds converge';
+    btn.classList.remove('running');
+    clearTimeout(animTimer);
+  }
+}
+
+function stepAnim() {
+  if (!animating) return;
+  setN(currentN);
+  if (currentN >= 96) {
+    animating = false;
+    document.getElementById('anim-btn').innerHTML = '▶ &ensp;Watch it converge again';
+    document.getElementById('anim-btn').classList.remove('running');
+    return;
+  }
+  const step  = currentN < 8  ? 1 : currentN < 16 ? 2 : currentN < 32 ? 4 : 8;
+  const delay = currentN < 10 ? 620 : currentN < 24 ? 460 : 360;
+  currentN += step;
+  animTimer = setTimeout(stepAnim, delay);
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+draw(6);
+</script>
+</body>
+</html>
