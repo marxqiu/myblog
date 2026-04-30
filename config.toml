@@ -21,7 +21,7 @@ posts = "/posts/:year/:month/:day/:slug/"
     weight = 3
 [[menu.en]]
     name = "Teaching Resources"
-    url = "/grade-7-h/"
+    url = "/teaching-resources/"
     weight = 4
 [[menu.en]]
     name = "中文"
@@ -33,7 +33,7 @@ posts = "/posts/:year/:month/:day/:slug/"
     weight = 2
 [[menu.cn]]
     name = "教学资源"
-    url = "/grade-7-h/"
+    url = "/teaching-resources/"
     weight = 3
 [[menu.cn]]
     name = "English"
