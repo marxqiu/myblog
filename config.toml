@@ -1,4 +1,4 @@
-baseURL = "https://example.com/"
+baseURL = "https://myblog.pages.dev/"
 languageCode = "en-us"
 title = "裘渝琛：Yuchen Qiu"
 theme = "hugo-ht"
@@ -33,14 +33,15 @@ posts = "/posts/:year/:month/:day/:slug/"
     weight = 3
 
 [params]
-    description = "Peronal website of Your Name"
-    homeText = "You just need a Hugo blog from scratch"
+    description = "Personal website of Yuchen Qiu"
+    homeText = "A layman's quest. Writing only about what captivates. Always learning."
     # Please make sure `blogDirNmae` matches the name used in `menu` above:
     blogDirName = "posts"
     # singleLang = true
     defaultLang = "en"
-    MathJaxCDN = "//cdnjs.cloudflare.com/ajax/libs" 
-    MathJaxVersion = "2.7.5"
+    enableComments = false
+    enableMathJax = false
+    enableVega = false
     favicon = "media/hugo-logo.png"
     # Edit by yourself:
     GithubEdit = "https://github.com/marxqiu/myblog/edit/main/content/"
