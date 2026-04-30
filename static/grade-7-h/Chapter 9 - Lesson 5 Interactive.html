@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quadrilateral Properties Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
+
+.topbar{display:flex;align-items:center;gap:16px;padding:8px 20px;background:#fff;border-bottom:1px solid #e2e8f0;flex-shrink:0}
+.logo{font-size:15px;font-weight:700;color:#1e293b;white-space:nowrap}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{padding:7px 18px;border:none;background:transparent;color:#64748b;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;border-radius:8px;transition:all .15s}
+.tab:hover{background:#f1f5f9;color:#334155}
+.tab.active{background:#1e40af;color:#fff}
+
+.workspace{flex:1;display:flex;overflow:hidden;position:relative}
+.canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:12px;background:#f1f5f9}
+canvas{background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,.06);touch-action:none}
+
+.sidebar{position:absolute;right:0;top:0;bottom:0;width:320px;background:#fff;border-left:1px solid #e2e8f0;padding:20px 18px;overflow-y:auto;z-index:10;box-shadow:-4px 0 16px rgba(0,0,0,.08);transform:translateX(100%);transition:transform .25s ease}
+.sidebar.show{transform:translateX(0)}
+.def-box{font-size:13.5px;line-height:1.55;color:#334155;padding:12px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #3b82f6;margin-bottom:18px}
+.def-box b{color:#1e293b}
+.prop-cat{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin:14px 0 6px;padding-top:8px;border-top:1px solid #f1f5f9}
+.prop-cat:first-child{margin-top:0;padding-top:0;border-top:none}
+.prop-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12.5px;color:#475569}
+.ind{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.ind.yes{background:#dcfce7;color:#16a34a}
+.ind.no{background:#fee2e2;color:#dc2626}
+.ind.partial{background:#fef3c7;color:#d97706}
+.measure-section{margin-top:14px;padding-top:10px;border-top:1px solid #f1f5f9}
+.measure-section h4{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:6px}
+.measure-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:12px;color:#64748b}
+.measure-grid span{font-weight:600;color:#334155}
+
+.toolbar{display:flex;justify-content:space-between;align-items:center;padding:8px 20px;background:#fff;border-top:1px solid #e2e8f0;flex-shrink:0;gap:8px;flex-wrap:wrap}
+.toggle-group{display:flex;gap:6px}
+.tbtn{padding:7px 18px;border:2px solid #e2e8f0;background:#fff;color:#64748b;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;border-radius:8px;transition:all .15s}
+.tbtn:hover{border-color:#cbd5e1}
+.tbtn.on{border-color:#3b82f6;background:#eff6ff;color:#2563eb}
+.tbtn.accent{border-color:#7c3aed;background:#f5f3ff;color:#6d28d9}
+.tbtn.accent.on{border-color:#7c3aed;background:#7c3aed;color:#fff}
+.action-group{display:flex;gap:6px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Quadrilateral Explorer</div>
+  <div class="tabs" id="tabs"></div>
+</div>
+
+<div class="workspace">
+  <div class="canvas-wrap">
+    <canvas id="cv"></canvas>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <div class="def-box" id="defBox"></div>
+    <div id="propList"></div>
+    <div class="measure-section" id="measureSection">
+      <h4>Measurements</h4>
+      <div class="measure-grid" id="measureGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toggle-group">
+    <button class="tbtn on" id="tSides" onclick="toggle('sides')">Sides</button>
+    <button class="tbtn" id="tAngles" onclick="toggle('angles')">Angles</button>
+    <button class="tbtn" id="tDiags" onclick="toggle('diags')">Diagonals</button>
+  </div>
+  <div class="action-group">
+    <button class="tbtn accent" id="tPanel" onclick="togglePanel()">Properties ▸</button>
+    <button class="tbtn" onclick="resetShape()">Reset</button>
+  </div>
+</div>
+
+<script>
+const FONT = '"DM Sans",system-ui,sans-serif';
+const SCALE = 30;
+const EPS_LEN = 2;
+const EPS_ANG = 1.8;
+const EPS_PAR = 0.035;
+const VERT_R = 8;
+const HIT_R = 18;
+const LABELS = ['A','B','C','D'];
+
+const SHAPES = [
+  {id:'parallelogram', name:'Parallelogram', def:'A quadrilateral whose <b>opposite sides are parallel</b>.'},
+  {id:'rectangle',     name:'Rectangle',     def:'A <b>parallelogram</b> with four <b>right angles</b>.'},
+  {id:'rhombus',       name:'Rhombus',       def:'A quadrilateral with <b>all sides equal</b> in length.'},
+  {id:'square',        name:'Square',        def:'A <b>rectangle</b> with <b>all sides equal</b> in length.'},
+  {id:'trapezium',     name:'Trapezium',     def:'A quadrilateral with <b>one pair</b> of opposite sides parallel.'},
+  {id:'kite',          name:'Kite',          def:'A quadrilateral with two pairs of <b>adjacent sides equal</b> in length.'}
+];
+
+const DEFAULTS = {
+  parallelogram: [{x:180,y:340},{x:480,y:340},{x:560,y:160},{x:260,y:160}],
+  rectangle:     [{x:160,y:370},{x:540,y:370},{x:540,y:150},{x:160,y:150}],
+  rhombus:       [{x:350,y:400},{x:540,y:260},{x:350,y:120},{x:160,y:260}],
+  square:        [{x:190,y:390},{x:510,y:390},{x:510,y:70},{x:190,y:70}],
+  trapezium:     [{x:140,y:360},{x:560,y:360},{x:460,y:160},{x:240,y:160}],
+  kite:          [{x:350,y:430},{x:520,y:245},{x:350,y:105},{x:180,y:245}]
+};
+
+const PROPS = [
+  {id:'bothPar',   label:'Both pairs of opposite sides parallel', cat:'Sides'},
+  {id:'oppEq',     label:'Opposite sides equal in length',        cat:'Sides'},
+  {id:'allEq',     label:'All sides equal in length',             cat:'Sides'},
+  {id:'oppAngEq',  label:'Opposite angles equal',                 cat:'Angles'},
+  {id:'allRight',  label:'All angles 90°',                        cat:'Angles'},
+  {id:'diagBis',   label:'Diagonals bisect each other',           cat:'Diagonals'},
+  {id:'diagEqLen', label:'Diagonals are equal in length',         cat:'Diagonals'},
+  {id:'diagPerp',  label:'Diagonals meet at right angles',        cat:'Diagonals'},
+  {id:'diagBisAng',label:'Diagonals bisect the vertex angles',    cat:'Diagonals'}
+];
+
+let cur = 'parallelogram';
+let V = [];
+let show = {sides:true, angles:false, diags:false};
+let panelOpen = false;
+let dragIdx = -1, hoverIdx = -1;
+let cw, ch;
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+// ── Math Utilities ──
+
+function dist(a,b){return Math.hypot(b.x-a.x, b.y-a.y)}
+function mid(a,b){return {x:(a.x+b.x)/2, y:(a.y+b.y)/2}}
+function sub(a,b){return {x:a.x-b.x, y:a.y-b.y}}
+function add(a,b){return {x:a.x+b.x, y:a.y+b.y}}
+function scale(v,s){return {x:v.x*s, y:v.y*s}}
+function len(v){return Math.hypot(v.x,v.y)}
+function norm(v){const l=len(v)||1;return {x:v.x/l,y:v.y/l}}
+function perp(v){return {x:-v.y, y:v.x}}
+function dot(a,b){return a.x*b.x+a.y*b.y}
+function cross(a,b){return a.x*b.y-a.y*b.x}
+
+function angleDeg(a,vertex,b){
+  const v1=sub(a,vertex), v2=sub(b,vertex);
+  const d=dot(v1,v2), l=len(v1)*len(v2);
+  if(l<.001)return 0;
+  return Math.acos(Math.max(-1,Math.min(1,d/l)))*180/Math.PI;
+}
+
+function lineInter(a,b,c,d){
+  const dx1=b.x-a.x, dy1=b.y-a.y, dx2=d.x-c.x, dy2=d.y-c.y;
+  const dn=dx1*dy2-dy1*dx2;
+  if(Math.abs(dn)<.001)return null;
+  const t=((c.x-a.x)*dy2-(c.y-a.y)*dx2)/dn;
+  return {x:a.x+t*dx1, y:a.y+t*dy1};
+}
+
+function reflect(p,l1,l2){
+  const dx=l2.x-l1.x, dy=l2.y-l1.y, ls=dx*dx+dy*dy;
+  if(ls<.001)return p;
+  const t=((p.x-l1.x)*dx+(p.y-l1.y)*dy)/ls;
+  return {x:2*(l1.x+t*dx)-p.x, y:2*(l1.y+t*dy)-p.y};
+}
+
+function arePar(i1,i2,j1,j2){
+  const a=sub(V[i2],V[i1]), b=sub(V[j2],V[j1]);
+  const la=len(a), lb=len(b);
+  if(la<1||lb<1)return false;
+  return Math.abs(cross(a,b))/(la*lb)<EPS_PAR;
+}
+
+function center4(){return {x:(V[0].x+V[1].x+V[2].x+V[3].x)/4, y:(V[0].y+V[1].y+V[2].y+V[3].y)/4}}
+
+// ── Shape Constraints ──
+
+function constrain(shape, verts, idx, pos){
+  const v = verts.map(p=>({...p}));
+  v[idx] = {...pos};
+
+  switch(shape){
+  case 'parallelogram':{
+    if(idx===3) v[0]={x:v[1].x+v[3].x-v[2].x, y:v[1].y+v[3].y-v[2].y};
+    else        v[3]={x:v[0].x+v[2].x-v[1].x, y:v[0].y+v[2].y-v[1].y};
+    return v;
+  }
+  case 'rectangle':{
+    const A=(idx<=1)?v[0]:verts[0], B=(idx<=1)?v[1]:verts[1];
+    const ab=sub(B,A), abl=len(ab);
+    if(abl<5)return verts;
+    const abn=norm(ab), pn=perp(abn);
+    let h;
+    if(idx<=1){
+      const oab=sub(verts[1],verts[0]),ol=len(oab);
+      if(ol<1)return verts;
+      const opn=perp(norm(oab));
+      h=dot(sub(verts[3],verts[0]),opn);
+    } else if(idx===2){
+      h=dot(sub(v[2],B),pn);
+    } else {
+      h=dot(sub(v[3],A),pn);
+    }
+    return [{...A},{...B},{x:B.x+pn.x*h,y:B.y+pn.y*h},{x:A.x+pn.x*h,y:A.y+pn.y*h}];
+  }
+  case 'rhombus':{
+    const oppIdx=(idx+2)%4, adjA=(idx+1)%4, adjB=(idx+3)%4;
+    const opp=verts[oppIdx];
+    const O=mid(pos,opp);
+    const hd1=sub(pos,O), l1=len(hd1);
+    if(l1<5)return verts;
+    const u1=norm(hd1);
+    const oldO=mid(verts[idx],verts[oppIdx]);
+    const oldH2=sub(verts[adjA],oldO);
+    const l2=len(oldH2);
+    const p1=perp(u1), p2=scale(perp(u1),-1);
+    const pu=dot(p1,oldH2)>=0?p1:p2;
+    const r=[];
+    r[idx]=pos; r[oppIdx]=opp;
+    r[adjA]={x:O.x+pu.x*l2,y:O.y+pu.y*l2};
+    r[adjB]={x:O.x-pu.x*l2,y:O.y-pu.y*l2};
+    return r;
+  }
+  case 'square':{
+    const oppIdx=(idx+2)%4, adjA=(idx+1)%4, adjB=(idx+3)%4;
+    const opp=verts[oppIdx];
+    const O=mid(pos,opp);
+    const hd=sub(pos,O), l=len(hd);
+    if(l<5)return verts;
+    const u=norm(hd);
+    const oldO=mid(verts[idx],verts[oppIdx]);
+    const oldH2=sub(verts[adjA],oldO);
+    const p1=perp(u), p2=scale(perp(u),-1);
+    const pu=dot(p1,oldH2)>=0?p1:p2;
+    const r=[];
+    r[idx]=pos; r[oppIdx]=opp;
+    r[adjA]={x:O.x+pu.x*l,y:O.y+pu.y*l};
+    r[adjB]={x:O.x-pu.x*l,y:O.y-pu.y*l};
+    return r;
+  }
+  case 'trapezium':{
+    const ab=sub(v[1],v[0]);
+    if(idx===3){
+      const abls=dot(ab,ab);
+      if(abls<1)return verts;
+      const cd=sub(v[3],v[2]);
+      const t=dot(cd,ab)/abls;
+      v[3]={x:v[2].x+t*ab.x, y:v[2].y+t*ab.y};
+    } else {
+      const oab=sub(verts[1],verts[0]), oabls=dot(oab,oab);
+      if(oabls<1)return verts;
+      const ocd=sub(verts[3],verts[2]);
+      const t=dot(ocd,oab)/oabls;
+      const nab=sub(v[1],v[0]);
+      v[3]={x:v[2].x+t*nab.x, y:v[2].y+t*nab.y};
+    }
+    return v;
+  }
+  case 'kite':{
+    if(idx===0||idx===2){
+      v[3]=reflect(v[1],v[0],v[2]);
+    } else if(idx===1){
+      v[3]=reflect(v[1],v[0],v[2]);
+    } else {
+      v[1]=reflect(v[3],v[0],v[2]);
+    }
+    return v;
+  }
+  }
+  return v;
+}
+
+// ── Property Computation ──
+
+function computeProps(){
+  const s=[dist(V[0],V[1]),dist(V[1],V[2]),dist(V[2],V[3]),dist(V[3],V[0])];
+  const a=[angleDeg(V[3],V[0],V[1]),angleDeg(V[0],V[1],V[2]),angleDeg(V[1],V[2],V[3]),angleDeg(V[2],V[3],V[0])];
+
+  const par1=arePar(0,1,3,2), par2=arePar(0,3,1,2);
+  const bothPar=par1&&par2;
+  const oppEq=Math.abs(s[0]-s[2])<EPS_LEN&&Math.abs(s[1]-s[3])<EPS_LEN;
+  const allEq=Math.abs(s[0]-s[1])<EPS_LEN&&Math.abs(s[1]-s[2])<EPS_LEN&&Math.abs(s[2]-s[3])<EPS_LEN;
+  const oppAng1=Math.abs(a[0]-a[2])<EPS_ANG, oppAng2=Math.abs(a[1]-a[3])<EPS_ANG;
+  const oppAngEq=oppAng1&&oppAng2?'yes':((oppAng1||oppAng2)?'partial':'no');
+  const allRight=a.every(x=>Math.abs(x-90)<EPS_ANG);
+
+  const inter=lineInter(V[0],V[2],V[1],V[3]);
+  let bisAC=false, bisBD=false, diagPerp=false, diagEqLen=false;
+  let dAC=dist(V[0],V[2]), dBD=dist(V[1],V[3]);
+  diagEqLen=Math.abs(dAC-dBD)<EPS_LEN;
+
+  if(inter){
+    bisAC=Math.abs(dist(V[0],inter)-dist(V[2],inter))<EPS_LEN;
+    bisBD=Math.abs(dist(V[1],inter)-dist(V[3],inter))<EPS_LEN;
+    const vac=sub(V[2],V[0]), vbd=sub(V[3],V[1]);
+    diagPerp=dAC>1&&dBD>1&&Math.abs(dot(vac,vbd))/(dAC*dBD)<EPS_PAR;
+  }
+
+  const diagBis=bisAC&&bisBD?'yes':(bisAC||bisBD?'partial':'no');
+
+  const bisA=[];
+  for(let i=0;i<4;i++){
+    const prev=V[(i+3)%4], c=V[i], next=V[(i+1)%4], opp=V[(i+2)%4];
+    const a1=angleDeg(prev,c,opp), a2=angleDeg(opp,c,next);
+    bisA.push(Math.abs(a1-a2)<EPS_ANG);
+  }
+  const diagBisAng=bisA.every(b=>b)?'yes':(bisA.some(b=>b)?'partial':'no');
+
+  return {bothPar,oppEq,allEq,oppAngEq,allRight,diagBis,diagEqLen,diagPerp,diagBisAng,
+          sides:s,angles:a,dAC,dBD,inter};
+}
+
+// ── Drawing ──
+
+function draw(){
+  ctx.clearRect(0,0,cw,ch);
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const C=center4();
+
+  // shape fill
+  ctx.fillStyle='rgba(59,130,246,.05)';
+  ctx.beginPath();
+  ctx.moveTo(V[0].x,V[0].y);
+  for(let i=1;i<4;i++) ctx.lineTo(V[i].x,V[i].y);
+  ctx.closePath(); ctx.fill();
+
+  // diagonals (behind outline)
+  if(show.diags) drawDiagonals();
+
+  // shape outline
+  ctx.strokeStyle='#1e3a5f'; ctx.lineWidth=2.5; ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(V[0].x,V[0].y);
+  for(let i=1;i<4;i++) ctx.lineTo(V[i].x,V[i].y);
+  ctx.closePath(); ctx.stroke();
+
+  if(show.sides) drawSideOverlay(C);
+  if(show.angles) drawAngleOverlay();
+
+  // vertices
+  for(let i=0;i<4;i++){
+    const r=(hoverIdx===i||dragIdx===i)?10:VERT_R;
+    ctx.fillStyle=(hoverIdx===i||dragIdx===i)?'#2563eb':'#3b82f6';
+    ctx.beginPath(); ctx.arc(V[i].x,V[i].y,r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(V[i].x,V[i].y,r*.45,0,Math.PI*2); ctx.fill();
+  }
+
+  // vertex labels
+  ctx.fillStyle='#0f172a'; ctx.font=`700 15px ${FONT}`;
+  for(let i=0;i<4;i++){
+    const d=sub(V[i],C), dl=len(d)||1;
+    const lx=V[i].x+d.x/dl*22, ly=V[i].y+d.y/dl*22;
+    ctx.fillText(LABELS[i],lx,ly);
+  }
+
+  if(panelOpen) updatePanel();
+}
+
+function drawSideOverlay(C){
+  const sides=[dist(V[0],V[1]),dist(V[1],V[2]),dist(V[2],V[3]),dist(V[3],V[0])];
+
+  // side length labels
+  ctx.fillStyle='#334155'; ctx.font=`600 13px ${FONT}`;
+  for(let i=0;i<4;i++){
+    const a=V[i], b=V[(i+1)%4];
+    const m=mid(a,b);
+    const edge=sub(b,a), pn=norm(perp(edge));
+    const toC=sub(C,m);
+    const sign=dot(pn,toC)>0?-1:1;
+    ctx.fillText((sides[i]/SCALE).toFixed(1), m.x+pn.x*sign*18, m.y+pn.y*sign*18);
+  }
+
+  // equal side tick marks
+  const groups=getEqualGroups(sides);
+  ctx.strokeStyle='#1e3a5f'; ctx.lineWidth=2; ctx.setLineDash([]);
+  for(const g of groups){
+    for(const si of g.indices){
+      drawTicks(V[si],V[(si+1)%4],g.ticks);
+    }
+  }
+
+  // parallel arrows
+  const pars=[];
+  if(arePar(0,1,3,2)) pars.push([[0,1],[3,2]]);
+  if(arePar(0,3,1,2)) pars.push([[0,3],[1,2]]);
+  ctx.strokeStyle='#7c3aed'; ctx.lineWidth=2;
+  pars.forEach((pair,pi)=>{
+    for(const [i,j] of pair) drawArrows(V[i],V[j],pi+1);
+  });
+}
+
+function drawAngleOverlay(){
+  ctx.strokeStyle='#059669'; ctx.lineWidth=1.5; ctx.setLineDash([]);
+  ctx.fillStyle='#059669'; ctx.font=`600 13px ${FONT}`;
+
+  for(let i=0;i<4;i++){
+    const prev=V[(i+3)%4], c=V[i], next=V[(i+1)%4];
+    const deg=angleDeg(prev,c,next);
+
+    if(Math.abs(deg-90)<EPS_ANG){
+      drawRightSymbol(prev,c,next,14);
+    } else {
+      drawArc(prev,c,next,deg,26);
+    }
+
+    const v1=norm(sub(prev,c)), v2=norm(sub(next,c));
+    const bisDir={x:v1.x+v2.x, y:v1.y+v2.y};
+    const bl=len(bisDir)||1;
+    const lr=40;
+    ctx.fillText(Math.round(deg)+'°', c.x+bisDir.x/bl*lr, c.y+bisDir.y/bl*lr);
+  }
+}
+
+function drawDiagonals(){
+  ctx.strokeStyle='#dc2626'; ctx.lineWidth=1.8; ctx.setLineDash([8,6]);
+  ctx.beginPath(); ctx.moveTo(V[0].x,V[0].y); ctx.lineTo(V[2].x,V[2].y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(V[1].x,V[1].y); ctx.lineTo(V[3].x,V[3].y); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const inter=lineInter(V[0],V[2],V[1],V[3]);
+  if(!inter)return;
+
+  // intersection dot
+  ctx.fillStyle='#dc2626';
+  ctx.beginPath(); ctx.arc(inter.x,inter.y,4,0,Math.PI*2); ctx.fill();
+
+  // diagonal length labels
+  ctx.fillStyle='#b91c1c'; ctx.font=`600 12px ${FONT}`;
+  const dAC=dist(V[0],V[2]), dBD=dist(V[1],V[3]);
+  const mAC=mid(V[0],V[2]), mBD=mid(V[1],V[3]);
+  const eAC=sub(V[2],V[0]), pAC=norm(perp(eAC));
+  const eBD=sub(V[3],V[1]), pBD=norm(perp(eBD));
+  ctx.fillText((dAC/SCALE).toFixed(1), mAC.x+pAC.x*16, mAC.y+pAC.y*16);
+  ctx.fillText((dBD/SCALE).toFixed(1), mBD.x+pBD.x*16, mBD.y+pBD.y*16);
+
+  // bisection tick marks on diagonals
+  const ai=dist(V[0],inter), ci=dist(V[2],inter), bi=dist(V[1],inter), di=dist(V[3],inter);
+  ctx.strokeStyle='#dc2626'; ctx.lineWidth=2;
+  if(Math.abs(ai-ci)<EPS_LEN){
+    drawTicks(V[0],inter,1); drawTicks(inter,V[2],1);
+  }
+  if(Math.abs(bi-di)<EPS_LEN){
+    const t=Math.abs(ai-ci)<EPS_LEN?2:1;
+    drawTicks(V[1],inter,t); drawTicks(inter,V[3],t);
+  }
+
+  // right angle at intersection
+  if(dAC>1&&dBD>1){
+    const vac=sub(V[2],V[0]), vbd=sub(V[3],V[1]);
+    if(Math.abs(dot(vac,vbd))/(dAC*dBD)<EPS_PAR){
+      ctx.strokeStyle='#dc2626'; ctx.lineWidth=1.5;
+      drawRightSymbol(V[0],inter,V[1],10);
+    }
+  }
+}
+
+// ── Drawing Helpers ──
+
+function getEqualGroups(sides){
+  const used=[false,false,false,false];
+  const groups=[];
+  let tc=1;
+  for(let i=0;i<4;i++){
+    if(used[i])continue;
+    const g=[i]; used[i]=true;
+    for(let j=i+1;j<4;j++){
+      if(!used[j]&&Math.abs(sides[i]-sides[j])<EPS_LEN){g.push(j);used[j]=true;}
+    }
+    if(g.length>=2){groups.push({indices:g,ticks:tc});tc++;}
+  }
+  return groups;
+}
+
+function drawTicks(p1,p2,n){
+  const m=mid(p1,p2), e=sub(p2,p1), u=norm(e), p=perp(u);
+  const tl=7, sp=5, start=-(n-1)*sp/2;
+  for(let i=0;i<n;i++){
+    const t=start+i*sp;
+    const cx=m.x+t*u.x, cy=m.y+t*u.y;
+    ctx.beginPath();
+    ctx.moveTo(cx-p.x*tl, cy-p.y*tl);
+    ctx.lineTo(cx+p.x*tl, cy+p.y*tl);
+    ctx.stroke();
+  }
+}
+
+function drawArrows(p1,p2,n){
+  const m=mid(p1,p2), e=sub(p2,p1), u=norm(e), p=perp(u);
+  const sz=6, sp=8, start=-(n-1)*sp/2;
+  for(let i=0;i<n;i++){
+    const t=start+i*sp;
+    const cx=m.x+t*u.x, cy=m.y+t*u.y;
+    ctx.beginPath();
+    ctx.moveTo(cx-sz*u.x+sz*p.x, cy-sz*u.y+sz*p.y);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx-sz*u.x-sz*p.x, cy-sz*u.y-sz*p.y);
+    ctx.stroke();
+  }
+}
+
+function drawArc(prev,vertex,next,deg,radius){
+  const a1=Math.atan2(prev.y-vertex.y, prev.x-vertex.x);
+  const a2=Math.atan2(next.y-vertex.y, next.x-vertex.x);
+  let cwSweep=a2-a1;
+  while(cwSweep<0)cwSweep+=Math.PI*2;
+  const cwDeg=cwSweep*180/Math.PI;
+  const acw=Math.abs(cwDeg-deg)>5;
+  ctx.beginPath();
+  ctx.arc(vertex.x,vertex.y,radius,a1,a2,acw);
+  ctx.stroke();
+}
+
+function drawRightSymbol(prev,vertex,next,sz){
+  const v1=norm(sub(prev,vertex)), v2=norm(sub(next,vertex));
+  const p1={x:vertex.x+v1.x*sz, y:vertex.y+v1.y*sz};
+  const p3={x:vertex.x+v2.x*sz, y:vertex.y+v2.y*sz};
+  const p2={x:p1.x+v2.x*sz, y:p1.y+v2.y*sz};
+  ctx.beginPath();
+  ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.lineTo(p3.x,p3.y);
+  ctx.stroke();
+}
+
+// ── Properties Panel ──
+
+function buildPropList(){
+  let html=''; let cat='';
+  for(const p of PROPS){
+    if(p.cat!==cat){cat=p.cat; html+=`<div class="prop-cat">${cat}</div>`;}
+    html+=`<div class="prop-row"><span class="ind" id="pi-${p.id}"></span><span>${p.label}</span></div>`;
+  }
+  document.getElementById('propList').innerHTML=html;
+}
+
+function updatePanel(){
+  const p=computeProps();
+  setInd('bothPar',p.bothPar);
+  setInd('oppEq',p.oppEq);
+  setInd('allEq',p.allEq);
+  setInd('oppAngEq',p.oppAngEq);
+  setInd('allRight',p.allRight);
+  setInd('diagBis',p.diagBis);
+  setInd('diagEqLen',p.diagEqLen);
+  setInd('diagPerp',p.diagPerp);
+  setInd('diagBisAng',p.diagBisAng);
+
+  let mg='';
+  for(let i=0;i<4;i++){
+    const l=LABELS[i]+LABELS[(i+1)%4];
+    mg+=`${l}: <span>${(p.sides[i]/SCALE).toFixed(1)}</span>`;
+  }
+  mg+=`∠A: <span>${Math.round(p.angles[0])}°</span>`;
+  mg+=`∠B: <span>${Math.round(p.angles[1])}°</span>`;
+  mg+=`∠C: <span>${Math.round(p.angles[2])}°</span>`;
+  mg+=`∠D: <span>${Math.round(p.angles[3])}°</span>`;
+  mg+=`AC: <span>${(p.dAC/SCALE).toFixed(1)}</span>`;
+  mg+=`BD: <span>${(p.dBD/SCALE).toFixed(1)}</span>`;
+  document.getElementById('measureGrid').innerHTML=mg;
+}
+
+function setInd(id,val){
+  const el=document.getElementById('pi-'+id);
+  if(!el)return;
+  if(val===true||val==='yes'){el.className='ind yes';el.textContent='✓';}
+  else if(val===false||val==='no'){el.className='ind no';el.textContent='✗';}
+  else{el.className='ind partial';el.textContent='~';}
+}
+
+// ── Interaction ──
+
+function getMousePos(e){
+  const r=cv.getBoundingClientRect();
+  return {x:e.clientX-r.left, y:e.clientY-r.top};
+}
+
+function getTouchPos(e){
+  const t=e.touches[0], r=cv.getBoundingClientRect();
+  return {x:t.clientX-r.left, y:t.clientY-r.top};
+}
+
+function findVertex(pos){
+  for(let i=0;i<4;i++) if(dist(V[i],pos)<HIT_R) return i;
+  return -1;
+}
+
+function clampPos(p){
+  return {x:Math.max(20,Math.min(cw-20,p.x)), y:Math.max(20,Math.min(ch-20,p.y))};
+}
+
+cv.addEventListener('mousedown', e=>{
+  const p=getMousePos(e);
+  dragIdx=findVertex(p);
+  if(dragIdx>=0) cv.style.cursor='grabbing';
+});
+
+cv.addEventListener('mousemove', e=>{
+  const p=getMousePos(e);
+  if(dragIdx>=0){
+    V=constrain(cur,V,dragIdx,clampPos(p));
+    draw();
+  } else {
+    const h=findVertex(p);
+    cv.style.cursor=h>=0?'grab':'default';
+    if(h!==hoverIdx){hoverIdx=h;draw();}
+  }
+});
+
+cv.addEventListener('mouseup', ()=>{dragIdx=-1;cv.style.cursor='default';});
+cv.addEventListener('mouseleave', ()=>{dragIdx=-1;hoverIdx=-1;cv.style.cursor='default';draw();});
+
+cv.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  const p=getTouchPos(e);
+  dragIdx=findVertex(p);
+},{passive:false});
+
+cv.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  if(dragIdx>=0&&e.touches.length){
+    const p=getTouchPos(e);
+    V=constrain(cur,V,dragIdx,clampPos(p));
+    draw();
+  }
+},{passive:false});
+
+cv.addEventListener('touchend', ()=>{dragIdx=-1;});
+
+// ── UI ──
+
+function buildTabs(){
+  const el=document.getElementById('tabs');
+  el.innerHTML=SHAPES.map(s=>`<button class="tab${s.id===cur?' active':''}" data-s="${s.id}">${s.name}</button>`).join('');
+  el.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchShape(b.dataset.s));
+}
+
+function switchShape(id){
+  cur=id;
+  V=scaledDefaults(id);
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.s===id));
+  document.getElementById('defBox').innerHTML=SHAPES.find(s=>s.id===id).def;
+  draw();
+}
+
+function toggle(key){
+  show[key]=!show[key];
+  document.getElementById('tSides').classList.toggle('on',show.sides);
+  document.getElementById('tAngles').classList.toggle('on',show.angles);
+  document.getElementById('tDiags').classList.toggle('on',show.diags);
+  draw();
+}
+
+function togglePanel(){
+  panelOpen=!panelOpen;
+  document.getElementById('sidebar').classList.toggle('show',panelOpen);
+  document.getElementById('tPanel').textContent=panelOpen?'◂ Properties':'Properties ▸';
+  if(panelOpen) draw();
+}
+
+function resetShape(){V=scaledDefaults(cur);draw();}
+
+// ── Canvas Setup ──
+
+function setupCanvas(){
+  const wrap=document.querySelector('.canvas-wrap');
+  const r=wrap.getBoundingClientRect();
+  const w=r.width-24, h=r.height-24;
+  const dpr=window.devicePixelRatio||1;
+  cv.width=w*dpr; cv.height=h*dpr;
+  cv.style.width=w+'px'; cv.style.height=h+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  cw=w; ch=h;
+}
+
+function scaledDefaults(id){
+  const d=DEFAULTS[id];
+  const sx=cw/700, sy=ch/500;
+  const s=Math.min(sx,sy)*.88;
+  const ox=(cw-700*s)/2, oy=(ch-500*s)/2;
+  return d.map(v=>({x:v.x*s+ox, y:v.y*s+oy}));
+}
+
+// ── Init ──
+
+function init(){
+  buildTabs();
+  buildPropList();
+  document.getElementById('defBox').innerHTML=SHAPES[0].def;
+  setupCanvas();
+  V=scaledDefaults(cur);
+  draw();
+}
+
+window.addEventListener('resize',()=>{setupCanvas();V=scaledDefaults(cur);draw();});
+init();
+</script>
+</body>
+</html>

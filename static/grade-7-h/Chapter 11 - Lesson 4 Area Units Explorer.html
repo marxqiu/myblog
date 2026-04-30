@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Area Units — Why We Square</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg:      #0d1117;
+  --bg2:     #161c27;
+  --bg3:     #1e2537;
+  --border:  #2b3652;
+  --text:    #ccd6f6;
+  --muted:   #6272a4;
+  --cyan:    #56d0e3;
+  --gold:    #f1c054;
+  --coral:   #f07868;
+  --green:   #50fa7b;
+  --fill:    #f1c05488;
+  --fill2:   #f1c054cc;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+.header-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+.header-title span { color: var(--cyan); }
+.header-divider { flex: 1; }
+.ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ctrl-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+select {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  padding: 6px 28px 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%236272a4' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  outline: none;
+  transition: border-color 0.2s;
+}
+select:focus { border-color: var(--cyan); }
+
+input[type="range"] {
+  accent-color: var(--cyan);
+  width: 80px;
+  cursor: pointer;
+}
+
+.btn {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 7px 18px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.96); }
+.btn-go { background: var(--cyan); color: #0d1117; }
+.btn-go:hover { filter: brightness(1.12); }
+.btn-reset {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.btn-reset:hover { border-color: var(--muted); color: var(--text); }
+
+/* ── MAIN ── */
+.main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── LEFT VIZ PANEL ── */
+.viz {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 28px 18px 28px;
+  gap: 12px;
+  min-width: 0;
+}
+.viz-label {
+  align-self: flex-start;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+#canvas1d { width: 100%; display: block; }
+.canvas2d-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+#canvas2d { display: block; }
+
+/* ── RIGHT STATS PANEL ── */
+.stats {
+  width: 290px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  gap: 12px;
+  overflow-y: auto;
+}
+.stat-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.counter-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.counter-main {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+  transition: color 0.4s;
+  letter-spacing: -0.02em;
+}
+.counter-main.done { color: var(--cyan); }
+.counter-unit {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+.divider { height: 1px; background: var(--border); flex-shrink: 0; }
+
+/* Equations */
+.eq-section { display: flex; flex-direction: column; gap: 10px; }
+.eq-row { display: flex; flex-direction: column; gap: 3px; }
+.eq-tag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+}
+.eq-tag-1d { background: rgba(240,120,104,0.15); color: var(--coral); }
+.eq-tag-2d { background: rgba(86,208,227,0.12); color: var(--cyan); }
+.eq-tag-result { background: rgba(241,192,84,0.12); color: var(--gold); }
+
+.eq-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text);
+  opacity: 0;
+  transition: opacity 0.5s;
+  white-space: pre-wrap;
+}
+.eq-text.show { opacity: 1; }
+.eq-text .val { color: var(--gold); font-weight: 700; }
+.eq-text .key { color: var(--cyan); font-weight: 700; }
+.eq-text .dim { color: var(--muted); }
+
+/* Phase dots */
+.phases {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.phase-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  transition: color 0.3s;
+}
+.phase-row.active { color: var(--text); }
+.phase-row.done { color: var(--muted); }
+.phase-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.phase-row.active .phase-dot { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.phase-row.done .phase-dot { background: var(--gold); }
+
+/* Insight */
+.insight {
+  background: linear-gradient(135deg,
+    rgba(86,208,227,0.06),
+    rgba(241,192,84,0.06));
+  border: 1px solid rgba(86,208,227,0.18);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.77rem;
+  line-height: 1.6;
+  opacity: 0;
+  transition: opacity 0.6s;
+  flex-shrink: 0;
+}
+.insight.show { opacity: 1; }
+.insight strong { color: var(--cyan); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-title">Area Units — <span>Why We Square</span></div>
+  <div class="header-divider"></div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Units</span>
+    <select id="pairSel">
+      <option value="mm_cm">mm² → cm²  (k = 10)</option>
+      <option value="cm_m" selected>cm² → m²  (k = 100)</option>
+      <option value="m_ha">m² → ha  (k = 100)</option>
+      <option value="ha_km">ha → km²  (k = 10)</option>
+    </select>
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Speed</span>
+    <input type="range" id="speed" min="1" max="5" value="3">
+  </div>
+  <button class="btn btn-go" id="goBtn">▶  Fill</button>
+  <button class="btn btn-reset" id="resetBtn">↺  Reset</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: canvases -->
+  <div class="viz">
+    <div class="viz-label">1D — Length</div>
+    <canvas id="canvas1d" height="60"></canvas>
+
+    <div class="viz-label" style="margin-top:4px;">2D — Area</div>
+    <div class="canvas2d-wrap">
+      <canvas id="canvas2d"></canvas>
+    </div>
+  </div>
+
+  <!-- RIGHT: stats -->
+  <div class="stats">
+    <div class="counter-wrap">
+      <div class="stat-label">Cells filled</div>
+      <div class="counter-main" id="counter">0</div>
+      <div class="counter-unit" id="counterUnit">cm²</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Phase progress -->
+    <div class="phases" id="phaseList">
+      <div class="phase-row" id="ph1">
+        <div class="phase-dot"></div>
+        <span>Divide length (1D)</span>
+      </div>
+      <div class="phase-row" id="ph2">
+        <div class="phase-dot"></div>
+        <span>Divide width (columns)</span>
+      </div>
+      <div class="phase-row" id="ph3">
+        <div class="phase-dot"></div>
+        <span>Divide height (rows)</span>
+      </div>
+      <div class="phase-row" id="ph4">
+        <div class="phase-dot"></div>
+        <span>Fill and count</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Equations -->
+    <div class="eq-section">
+      <div class="eq-row">
+        <span class="eq-tag eq-tag-1d">1D</span>
+        <div class="eq-text" id="eq1d"></div>
+      </div>
+      <div class="eq-row">
+        <span class="eq-tag eq-tag-2d">2D</span>
+        <div class="eq-text" id="eq2d"></div>
+      </div>
+      <div class="eq-row">
+        <span class="eq-tag eq-tag-result">Result</span>
+        <div class="eq-text" id="eqResult"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Insight -->
+    <div class="insight" id="insight"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+const PAIRS = {
+  mm_cm: { big:'cm',  small:'mm',  k:10,  total:100,   k1d:'10 mm per cm' },
+  cm_m:  { big:'m',   small:'cm',  k:100, total:10000, k1d:'100 cm per m' },
+  m_ha:  { big:'ha',  small:'m',   k:100, total:10000, k1d:'100 m per ha-side' },
+  ha_km: { big:'km',  small:'ha',  k:10,  total:100,   k1d:'10 ha per km-side' },
+};
+
+// Visual grid is always at most VMAX × VMAX cells
+// For k ≤ VMAX: show actual grid; for k > VMAX: each visual cell = multiple real cells
+const VMAX = 20;
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let pair = PAIRS.cm_m;
+let phase = 0; // 0=idle 1=1d 2=cols 3=rows 4=fill 5=done
+let animating = false;
+let rafId = null;
+let lastT = 0;
+
+// Sub-state (fractional, for smooth animation)
+let p1d = 0;         // 0→1: progress of 1D ruler
+let colsF = 0;       // 0→vk: columns drawn
+let rowsF = 0;       // 0→vk: rows drawn
+let fillF = 0;       // 0→vk*vk: visual cells filled
+
+// Canvas refs
+let c1, x1, c2, x2;
+let size2 = 400; // px of the 2D canvas (updated on layout)
+
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+function vk() { return Math.min(pair.k, VMAX); }
+function cellsPerVCell() { return pair.total / (vk() * vk()); }
+function actualFilled() { return Math.round(fillF * cellsPerVCell()); }
+
+function speedMult() {
+  const v = parseInt(document.getElementById('speed').value);
+  return [0.35, 0.65, 1.2, 2.5, 5][v - 1];
+}
+
+// ═══════════════════════════════════════
+// INIT / RESIZE
+// ═══════════════════════════════════════
+function initCanvases() {
+  c1 = document.getElementById('canvas1d');
+  x1 = c1.getContext('2d');
+  c2 = document.getElementById('canvas2d');
+  x2 = c2.getContext('2d');
+
+  const dpr = window.devicePixelRatio || 1;
+
+  // 1D canvas: match parent width
+  const vizW = c1.parentElement.clientWidth - 56; // minus padding
+  c1.style.width  = vizW + 'px';
+  c1.width  = Math.round(vizW * dpr);
+  c1.height = Math.round(60 * dpr);
+  x1.scale(dpr, dpr);
+  x1._w = vizW; x1._h = 60;
+
+  // 2D canvas: square fitting the wrap
+  const wrap = document.querySelector('.canvas2d-wrap');
+  const maxS = Math.min(wrap.clientWidth - 8, wrap.clientHeight - 8);
+  size2 = Math.max(200, maxS);
+  c2.style.width  = size2 + 'px';
+  c2.style.height = size2 + 'px';
+  c2.width  = Math.round(size2 * dpr);
+  c2.height = Math.round(size2 * dpr);
+  x2.scale(dpr, dpr);
+  x2._s = size2;
+}
+
+// ═══════════════════════════════════════
+// DRAWING — 1D ruler
+// ═══════════════════════════════════════
+function draw1d() {
+  const W = x1._w, H = x1._h;
+  const dv = vk();
+  const pad = 12;
+  const barY = H / 2;
+  const barH = 28;
+  const L = pad, R = W - pad;
+  const bW = R - L;
+  const cellW = bW / dv;
+
+  x1.clearRect(0, 0, W, H);
+
+  // Background bar
+  x1.fillStyle = '#1e2537';
+  x1.strokeStyle = '#2b3652';
+  x1.lineWidth = 1;
+  x1.beginPath();
+  x1.rect(L, barY - barH/2, bW, barH);
+  x1.fill(); x1.stroke();
+
+  // Segments filled so far
+  const segCount = Math.floor(p1d * dv);
+  for (let i = 0; i < segCount; i++) {
+    const hue = 15 + (i / dv) * 20;
+    x1.fillStyle = `hsla(${hue}, 90%, 65%, 0.35)`;
+    x1.fillRect(L + i * cellW + 0.5, barY - barH/2 + 1, cellW - 1, barH - 2);
+  }
+
+  // Tick marks
+  x1.fillStyle = '#56d0e3';
+  for (let i = 1; i < segCount && i < dv; i++) {
+    const x = L + i * cellW;
+    x1.fillRect(x - 0.5, barY - barH/2, 1, barH);
+  }
+
+  // Outer border
+  x1.strokeStyle = '#ccd6f6';
+  x1.lineWidth = 1.5;
+  x1.strokeRect(L, barY - barH/2, bW, barH);
+
+  // Labels
+  x1.font = '700 11px JetBrains Mono, monospace';
+  x1.fillStyle = '#ccd6f6';
+  x1.textAlign = 'left';
+  x1.textBaseline = 'bottom';
+  x1.fillText('1 ' + pair.big, L, barY - barH/2 - 3);
+
+  if (p1d >= 1) {
+    x1.fillStyle = '#f07868';
+    x1.textAlign = 'right';
+    x1.fillText('= ' + pair.k + ' ' + pair.small, R, barY - barH/2 - 3);
+
+    // Small tick numbers if dv ≤ 10
+    if (dv <= 10) {
+      x1.fillStyle = '#6272a4';
+      x1.font = '10px JetBrains Mono, monospace';
+      x1.textAlign = 'center';
+      x1.textBaseline = 'top';
+      for (let i = 1; i <= dv; i++) {
+        x1.fillText(i, L + (i - 0.5) * cellW, barY + barH/2 + 3);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// DRAWING — 2D square
+// ═══════════════════════════════════════
+function draw2d() {
+  const S = x2._s;
+  const dv = vk();
+  const cs = S / dv; // visual cell size
+
+  x2.clearRect(0, 0, S, S);
+
+  // Background
+  x2.fillStyle = '#1e2537';
+  x2.fillRect(0, 0, S, S);
+
+  // --- Filled cells (row-major sweep) ---
+  const vFilled = Math.floor(fillF);
+  if (vFilled > 0) {
+    const fullRows = Math.floor(vFilled / dv);
+    const partCols = vFilled % dv;
+
+    // Full rows
+    if (fullRows > 0) {
+      x2.fillStyle = '#f1c05466';
+      x2.fillRect(0, 0, S, fullRows * cs);
+    }
+    // Partial row
+    if (partCols > 0 && fullRows < dv) {
+      x2.fillStyle = '#f1c05466';
+      x2.fillRect(0, fullRows * cs, partCols * cs, cs);
+    }
+
+    // "Leading cell" highlight
+    const lcR = Math.min(fullRows, dv - 1);
+    const lcC = partCols > 0 ? partCols - 1 : -1;
+    if (lcC >= 0) {
+      x2.fillStyle = '#f1c054cc';
+      x2.fillRect(lcC * cs + 0.5, lcR * cs + 0.5, cs - 1, cs - 1);
+    }
+  }
+
+  // --- Column lines ---
+  const colsDraw = Math.min(Math.floor(colsF), dv - 1);
+  x2.strokeStyle = '#56d0e380';
+  x2.lineWidth = 0.5;
+  for (let c = 1; c <= colsDraw; c++) {
+    const x = c * cs;
+    x2.beginPath();
+    x2.moveTo(x, 0); x2.lineTo(x, S);
+    x2.stroke();
+  }
+
+  // --- Row lines ---
+  const rowsDraw = Math.min(Math.floor(rowsF), dv - 1);
+  x2.strokeStyle = '#f07868aa';
+  x2.lineWidth = 0.5;
+  for (let r = 1; r <= rowsDraw; r++) {
+    const y = r * cs;
+    x2.beginPath();
+    x2.moveTo(0, y); x2.lineTo(S, y);
+    x2.stroke();
+  }
+
+  // Outer border
+  x2.strokeStyle = '#ccd6f6';
+  x2.lineWidth = 2;
+  x2.strokeRect(0.5, 0.5, S - 1, S - 1);
+
+  // Centre label when empty
+  if (vFilled === 0 && colsF < 1) {
+    x2.fillStyle = '#6272a4';
+    x2.font = '600 16px Plus Jakarta Sans, sans-serif';
+    x2.textAlign = 'center';
+    x2.textBaseline = 'middle';
+    x2.fillText('1 ' + pair.big + '²', S / 2, S / 2);
+  }
+
+  // "each cell = N small²" note for k > VMAX
+  if (pair.k > VMAX && fillF > 0 && fillF < dv * dv) {
+    const n = Math.round(cellsPerVCell());
+    x2.fillStyle = '#6272a4';
+    x2.font = '10px JetBrains Mono, monospace';
+    x2.textAlign = 'left';
+    x2.textBaseline = 'top';
+    x2.fillText('(each square = ' + n + ' ' + pair.small + '²)', 4, 4);
+  }
+}
+
+// ═══════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════
+// Speeds: units per second for each phase
+const SPD = {
+  p1d:  1.8,    // 1D: fraction/sec
+  cols: 10,     // columns/sec
+  rows: 10,     // rows/sec
+  fill: 800,    // visual cells/sec (actual is × cellsPerVCell)
+};
+
+function tick(ts) {
+  if (!animating) return;
+  const dt = Math.min((ts - lastT) / 1000, 0.12);
+  lastT = ts;
+  const sm = speedMult();
+  const dv = vk();
+
+  if (phase === 1) {
+    // 1D ruler
+    p1d = Math.min(1, p1d + SPD.p1d * sm * dt);
+    draw1d();
+    if (p1d >= 1) {
+      setPhase(2);
+      showEq('eq1d', `1 ${pair.big} = <span class="val">${pair.k}</span> <span class="dim">×</span> 1 ${pair.small}`);
+      colsF = 0;
+    }
+  }
+  else if (phase === 2) {
+    // Columns
+    colsF = Math.min(dv - 1 + 0.01, colsF + SPD.cols * sm * dt);
+    draw2d();
+    if (colsF >= dv - 1) {
+      colsF = dv - 1;
+      setPhase(3);
+      rowsF = 0;
+    }
+  }
+  else if (phase === 3) {
+    // Rows
+    rowsF = Math.min(dv - 1 + 0.01, rowsF + SPD.rows * sm * dt);
+    draw2d();
+    if (rowsF >= dv - 1) {
+      rowsF = dv - 1;
+      showEq('eq2d',
+        `<span class="val">${pair.k}</span> cols\n× <span class="val">${pair.k}</span> rows\n= <span class="val">${pair.k}</span>² = <span class="key">${pair.total.toLocaleString()}</span>`);
+      setPhase(4);
+      fillF = 0;
+    }
+  }
+  else if (phase === 4) {
+    // Fill
+    fillF = Math.min(dv * dv, fillF + SPD.fill * sm * dt);
+    const actual = actualFilled();
+    document.getElementById('counter').textContent = actual.toLocaleString();
+    draw2d();
+
+    if (fillF >= dv * dv) {
+      fillF = dv * dv;
+      phase = 5;
+      document.getElementById('counter').textContent = pair.total.toLocaleString();
+      document.getElementById('counter').classList.add('done');
+      showEq('eqResult',
+        `1 ${pair.big}² = <span class="key">${pair.total.toLocaleString()} ${pair.small}²</span>`);
+      setPhase(5);
+      showInsight();
+      document.getElementById('goBtn').textContent = '✓  Done';
+      animating = false;
+      return;
+    }
+  }
+
+  rafId = requestAnimationFrame(tick);
+}
+
+// ═══════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════
+function setPhase(n) {
+  phase = n;
+  const ids = ['ph1','ph2','ph3','ph4'];
+  ids.forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+    if (i + 1 === n) el.classList.add('active');
+    else if (i + 1 < n) el.classList.add('done');
+  });
+}
+
+function showEq(id, html) {
+  const el = document.getElementById(id);
+  el.innerHTML = html;
+  el.classList.add('show');
+}
+
+function showInsight() {
+  const box = document.getElementById('insight');
+  box.innerHTML =
+    `The length factor is <strong>${pair.k}</strong> (1 ${pair.big} = ${pair.k} ${pair.small}s).<br><br>` +
+    `Because area is <strong>2-dimensional</strong>, you apply it <strong>twice</strong> — once along the width, once along the height:<br><br>` +
+    `<strong style="color:var(--gold)">${pair.k} × ${pair.k} = ${pair.k}² = ${pair.total.toLocaleString()}</strong><br><br>` +
+    `That is why you <em>square</em> the length factor, not just multiply by it.`;
+  box.classList.add('show');
+}
+
+// ═══════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════
+function reset() {
+  animating = false;
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  phase = 0; p1d = 0; colsF = 0; rowsF = 0; fillF = 0;
+
+  // UI
+  document.getElementById('counter').textContent = '0';
+  document.getElementById('counter').classList.remove('done');
+  document.getElementById('counterUnit').textContent = pair.small + '²';
+  document.getElementById('goBtn').textContent = '▶  Fill';
+
+  ['ph1','ph2','ph3','ph4'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+  });
+  ['eq1d','eq2d','eqResult'].forEach(id => {
+    const el = document.getElementById(id);
+    el.textContent = ''; el.classList.remove('show');
+  });
+  document.getElementById('insight').innerHTML = '';
+  document.getElementById('insight').classList.remove('show');
+
+  draw1d();
+  draw2d();
+}
+
+// ═══════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════
+document.getElementById('goBtn').addEventListener('click', () => {
+  if (phase === 5) { reset(); return; }
+  if (animating) return;
+  animating = true;
+  if (phase === 0) setPhase(1);
+  lastT = performance.now();
+  rafId = requestAnimationFrame(tick);
+  document.getElementById('goBtn').textContent = '⏸  Running';
+});
+
+document.getElementById('resetBtn').addEventListener('click', reset);
+
+document.getElementById('pairSel').addEventListener('change', () => {
+  pair = PAIRS[document.getElementById('pairSel').value];
+  reset();
+});
+
+window.addEventListener('resize', () => {
+  if (animating) return;
+  initCanvases();
+  draw1d(); draw2d();
+});
+
+// ═══════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════
+window.addEventListener('load', () => {
+  initCanvases();
+  draw1d();
+  draw2d();
+});
+</script>
+</body>
+</html>

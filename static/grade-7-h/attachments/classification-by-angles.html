@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classification by Angles</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Georgia', 'Times New Roman', serif;
+  }
+  .container {
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+    padding: 20px;
+  }
+  .triangle-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .triangle-group h2 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #222;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="triangle-group">
+    <canvas id="acute" width="280" height="260"></canvas>
+    <h2>Acute</h2>
+  </div>
+  <div class="triangle-group">
+    <canvas id="obtuse" width="320" height="260"></canvas>
+    <h2>Obtuse</h2>
+  </div>
+  <div class="triangle-group">
+    <canvas id="right" width="280" height="260"></canvas>
+    <h2>Right-angled</h2>
+  </div>
+</div>
+
+<script>
+const DPR = window.devicePixelRatio || 1;
+
+function setupCanvas(id) {
+  const c = document.getElementById(id);
+  const w = c.width, h = c.height;
+  c.width = w * DPR;
+  c.height = h * DPR;
+  c.style.width = w + 'px';
+  c.style.height = h + 'px';
+  const ctx = c.getContext('2d');
+  ctx.scale(DPR, DPR);
+  return { ctx, w, h };
+}
+
+function drawTriangle(ctx, pts, fill) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  ctx.lineTo(pts[1][0], pts[1][1]);
+  ctx.lineTo(pts[2][0], pts[2][1]);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+
+function drawAngleArc(ctx, vertex, p1, p2, radius, color) {
+  const dx1 = p1[0] - vertex[0], dy1 = p1[1] - vertex[1];
+  const dx2 = p2[0] - vertex[0], dy2 = p2[1] - vertex[1];
+  const a1 = Math.atan2(dy1, dx1);
+  const a2 = Math.atan2(dy2, dx2);
+
+  let start = a1, end = a2;
+  let diff = end - start;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  const ccw = diff < 0;
+
+  ctx.beginPath();
+  ctx.arc(vertex[0], vertex[1], radius, start, end, ccw);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+}
+
+function drawRightAngle(ctx, vertex, p1, p2, size, color) {
+  const dx1 = p1[0] - vertex[0], dy1 = p1[1] - vertex[1];
+  const len1 = Math.hypot(dx1, dy1);
+  const ux1 = dx1/len1, uy1 = dy1/len1;
+
+  const dx2 = p2[0] - vertex[0], dy2 = p2[1] - vertex[1];
+  const len2 = Math.hypot(dx2, dy2);
+  const ux2 = dx2/len2, uy2 = dy2/len2;
+
+  const c1 = [vertex[0] + ux1*size, vertex[1] + uy1*size];
+  const corner = [c1[0] + ux2*size, c1[1] + uy2*size];
+  const c2 = [vertex[0] + ux2*size, vertex[1] + uy2*size];
+
+  ctx.beginPath();
+  ctx.moveTo(c1[0], c1[1]);
+  ctx.lineTo(corner[0], corner[1]);
+  ctx.lineTo(c2[0], c2[1]);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+}
+
+// Acute triangle
+{
+  const { ctx } = setupCanvas('acute');
+  const A = [20, 230], B = [260, 230], C = [150, 20];
+  drawTriangle(ctx, [A, B, C], '#fef3e0');
+  drawAngleArc(ctx, A, B, C, 28, '#1565c0');
+  drawAngleArc(ctx, B, A, C, 28, '#1565c0');
+  drawAngleArc(ctx, C, A, B, 28, '#1565c0');
+}
+
+// Obtuse triangle
+{
+  const { ctx } = setupCanvas('obtuse');
+  const A = [110, 230], B = [300, 230], C = [25, 50];
+  drawTriangle(ctx, [A, B, C], '#fef3e0');
+  drawAngleArc(ctx, A, B, C, 30, '#c62828');
+  drawAngleArc(ctx, B, A, C, 28, '#1565c0');
+  drawAngleArc(ctx, C, A, B, 28, '#1565c0');
+}
+
+// Right triangle
+{
+  const { ctx } = setupCanvas('right');
+  const A = [30, 230], B = [260, 230], C = [30, 30];
+  drawTriangle(ctx, [A, B, C], '#fef3e0');
+  drawRightAngle(ctx, A, B, C, 22, '#1565c0');
+  drawAngleArc(ctx, B, A, C, 28, '#1565c0');
+  drawAngleArc(ctx, C, A, B, 28, '#1565c0');
+}
+</script>
+</body>
+</html>

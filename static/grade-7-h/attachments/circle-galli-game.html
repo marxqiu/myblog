@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Galli Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7fafc;
+            color: #2d3748;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .screen {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        #start-screen, #game-over-screen {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #start-screen h1 {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            color: #2b6cb0;
+        }
+
+        #start-screen p {
+            font-size: 2rem;
+            margin-bottom: 40px;
+            color: #4a5568;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: #2b6cb0;
+        }
+
+        .round-info {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: #edf2f7;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .scoreboard {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .group {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .group-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .score-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .score-controls button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #e2e8f0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .score-controls button:hover {
+            background: #cbd5e0;
+        }
+
+        .score-val {
+            font-size: 2rem;
+            font-weight: bold;
+            min-width: 40px;
+        }
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            width: 100%;
+            max-width: 900px;
+            perspective: 1000px;
+        }
+
+        .card {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background-color: transparent;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .card.revealed .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            font-size: 5rem;
+            font-weight: bold;
+        }
+
+        .card-back {
+            background: white;
+            transform: rotateY(180deg);
+            border: 5px solid transparent;
+            transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+        }
+
+        .card.highlight .card-back {
+            border-color: #48bb78;
+            box-shadow: 0 0 20px rgba(72, 187, 120, 0.5);
+            background-color: #f0fff4;
+        }
+
+        .card-word, .card-def {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .card-def {
+            font-size: 1.5rem;
+            padding: 20px;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .card-word {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2b6cb0;
+        }
+
+        .card-svg-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        .card-svg {
+            width: 80%;
+            height: 80%;
+            max-height: 250px;
+        }
+
+        .controls {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            height: 60px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: #3182ce;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .status-msg {
+            font-size: 1.8rem;
+            font-weight: bold;
+            min-width: 250px;
+            text-align: center;
+            transition: color 0.3s;
+        }
+
+        #game-over-screen h2 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #2b6cb0;
+        }
+
+        #game-over-screen p {
+            font-size: 2rem;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+    <!-- SVG Defs -->
+    <svg width="0" height="0" style="position:absolute; visibility:hidden;">
+        <defs>
+            <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L0,6 L9,3 z" fill="#e53e3e" />
+            </marker>
+        </defs>
+    </svg>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen">
+        <h1>Circle Galli</h1>
+        <p>A fast-paced matching game for circle vocabulary!</p>
+        
+        <div class="instructions" style="text-align: left; max-width: 600px; margin: 0 auto 40px auto; background: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <h3 style="margin-top: 0; color: #2b6cb0; font-size: 1.5rem;">How to Play:</h3>
+            <ul style="font-size: 1.2rem; line-height: 1.6; color: #4a5568; padding-left: 20px; margin-bottom: 0;">
+                <li>Each round, 4 cards will be flipped face-up on the screen.</li>
+                <li>Cards can show a <strong>Word</strong>, a <strong>Definition</strong>, or a <strong>Diagram</strong>.</li>
+                <li>If you spot ANY TWO cards that describe the <strong>same concept</strong>, race to ring the bell!</li>
+                <li>The teacher will click <em>Reveal Answer</em>. If you are correct, your group gets 1 point.</li>
+                <li>Beware: Sometimes there are NO matches at all!</li>
+            </ul>
+        </div>
+
+        <button class="btn btn-primary" onclick="startGame()">Start Game</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen" style="display: none;">
+        <header>
+            <h1>Circle Galli</h1>
+            <div id="round-counter" class="round-info">Round 1 / 9</div>
+        </header>
+
+        <div class="scoreboard">
+            <div class="group">
+                <div class="group-name">Group 1</div>
+                <div class="score-controls">
+                    <button onclick="subScore(0)">-</button>
+                    <span id="score-0" class="score-val">0</span>
+                    <button onclick="addScore(0)">+</button>
+                </div>
+            </div>
+            <div class="group">
+                <div class="group-name">Group 2</div>
+                <div class="score-controls">
+                    <button onclick="subScore(1)">-</button>
+                    <span id="score-1" class="score-val">0</span>
+                    <button onclick="addScore(1)">+</button>
+                </div>
+            </div>
+            <div class="group">
+                <div class="group-name">Group 3</div>
+                <div class="score-controls">
+                    <button onclick="subScore(2)">-</button>
+                    <span id="score-2" class="score-val">0</span>
+                    <button onclick="addScore(2)">+</button>
+                </div>
+            </div>
+            <div class="group">
+                <div class="group-name">Group 4</div>
+                <div class="score-controls">
+                    <button onclick="subScore(3)">-</button>
+                    <span id="score-3" class="score-val">0</span>
+                    <button onclick="addScore(3)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-area">
+            <div id="card-grid" class="card-grid">
+                <!-- Cards injected dynamically -->
+            </div>
+
+            <div class="controls">
+                <button id="reveal-btn" class="btn btn-secondary" onclick="revealMatch()">Reveal Answer</button>
+                <div id="status-msg" class="status-msg">Look for a match!</div>
+                <button id="next-btn" class="btn btn-primary" onclick="nextRound()" disabled>Next Round</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen" style="display: none;">
+        <h2>Game Over!</h2>
+        <p id="winner-text"></p>
+        <button class="btn btn-primary" onclick="restartGame()">Play Again (New Players)</button>
+    </div>
+
+    <script>
+        const terms = [
+            {
+                id: 'radius',
+                word: 'Radius',
+                definition: 'A straight line segment which joins the circle\'s centre to any point on the circle.',
+                svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="3" fill="#333"/><line x1="50" y1="50" x2="90" y2="50" stroke="#e53e3e" stroke-width="3"/>'
+            },
+            {
+                id: 'diameter',
+                word: 'Diameter',
+                definition: 'A chord which passes through the circle\'s centre.',
+                svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="3" fill="#333"/><line x1="10" y1="50" x2="90" y2="50" stroke="#e53e3e" stroke-width="3"/>'
+            },
+            {
+                id: 'chord',
+                word: 'Chord',
+                definition: 'A line which joins any two points on the circle.',
+                svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="3" fill="#333"/><line x1="15.36" y1="30" x2="84.64" y2="30" stroke="#e53e3e" stroke-width="3"/>'
+            },
+            {
+                id: 'arc',
+                word: 'Arc',
+                definition: 'A part of a circle. It joins any two different points on the circle.',
+                svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="3" fill="#333"/><path d="M 90 50 A 40 40 0 0 0 50 10" fill="none" stroke="#e53e3e" stroke-width="6"/>'
+            },
+            {
+                id: 'semicircle',
+                word: 'Semi-circle',
+                definition: 'A half of a circle.',
+                svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="3" fill="#333"/><line x1="10" y1="50" x2="90" y2="50" stroke="#333" stroke-width="2"/><path d="M 10 50 A 40 40 0 0 1 90 50 Z" fill="rgba(229, 62, 62, 0.3)" stroke="#e53e3e" stroke-width="3"/>'
+            },
+            {
+                id: 'sector',
+                word: 'Sector',
+                definition: 'The region between two radii and the circle.',
+                svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="3" fill="#333"/><path d="M 50 50 L 90 50 A 40 40 0 0 0 50 10 Z" fill="rgba(229, 62, 62, 0.3)" stroke="#e53e3e" stroke-width="2"/>'
+            },
+            {
+                id: 'segment',
+                word: 'Segment',
+                definition: 'The region between a chord and the circle.',
+                svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="3" fill="#333"/><line x1="15.36" y1="30" x2="84.64" y2="30" stroke="#333" stroke-width="2"/><path d="M 84.64 30 A 40 40 0 0 0 15.36 30 L 84.64 30 Z" fill="rgba(229, 62, 62, 0.3)" stroke="#e53e3e" stroke-width="2"/>'
+            },
+            {
+                id: 'tangent',
+                word: 'Tangent',
+                definition: 'A line which touches the circle but does not enter it. A tangent is always perpendicular to the radius at that point.',
+                svg: '<circle cx="50" cy="50" r="40" fill="none" stroke="#333" stroke-width="2"/><circle cx="50" cy="50" r="3" fill="#333"/><line x1="90" y1="10" x2="90" y2="90" stroke="#e53e3e" stroke-width="3"/><line x1="50" y1="50" x2="90" y2="50" stroke="#333" stroke-width="2" stroke-dasharray="4"/><polyline points="85 50 85 45 90 45" fill="none" stroke="#333" stroke-width="1"/>'
+            }
+        ];
+
+        let currentRound = 0;
+        const totalRounds = 9;
+        let scores = [0, 0, 0, 0];
+        let currentCards = [];
+        let matchExists = false;
+        let matchingIndices = [];
+
+        function addScore(groupIndex) {
+            scores[groupIndex]++;
+            document.getElementById(`score-${groupIndex}`).innerText = scores[groupIndex];
+        }
+
+        function subScore(groupIndex) {
+            if (scores[groupIndex] > 0) {
+                scores[groupIndex]--;
+                document.getElementById(`score-${groupIndex}`).innerText = scores[groupIndex];
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            restartGame();
+        }
+
+        function restartGame() {
+            currentRound = 0;
+            scores = [0, 0, 0, 0];
+            for(let i=0; i<4; i++) {
+                document.getElementById(`score-${i}`).innerText = '0';
+            }
+            document.getElementById('game-over-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            nextRound();
+        }
+
+        function nextRound() {
+            if (currentRound >= totalRounds) {
+                showGameOver();
+                return;
+            }
+            currentRound++;
+            document.getElementById('round-counter').innerText = `Round ${currentRound} / ${totalRounds}`;
+            
+            const statusMsg = document.getElementById('status-msg');
+            statusMsg.innerText = "Look for a match!";
+            statusMsg.style.color = "";
+            
+            document.getElementById('reveal-btn').disabled = false;
+            document.getElementById('next-btn').disabled = true;
+
+            // Generate and render immediately so they start face-down
+            generateCards();
+            renderCards();
+
+            // Small delay before flipping face up
+            setTimeout(() => {
+                document.querySelectorAll('.card').forEach(c => c.classList.add('revealed'));
+            }, 50);
+        }
+
+        function generateCards() {
+            // 70% chance to have a matching pair, 30% chance of no matches
+            const isMatch = Math.random() < 0.7; 
+            matchExists = isMatch;
+            currentCards = [];
+            matchingIndices = [];
+            
+            const types = ['word', 'definition', 'svg'];
+            
+            if (isMatch) {
+                // Pick 1 concept to match
+                const matchConcept = terms[Math.floor(Math.random() * terms.length)];
+                // Pick 2 distinct types for the matching concept
+                const shuffledTypes = [...types].sort(() => 0.5 - Math.random());
+                currentCards.push({ concept: matchConcept, type: shuffledTypes[0], isMatch: true });
+                currentCards.push({ concept: matchConcept, type: shuffledTypes[1], isMatch: true });
+                
+                // Pick 2 other distinct concepts
+                let otherConcepts = terms.filter(t => t.id !== matchConcept.id).sort(() => 0.5 - Math.random());
+                currentCards.push({ concept: otherConcepts[0], type: types[Math.floor(Math.random() * types.length)], isMatch: false });
+                currentCards.push({ concept: otherConcepts[1], type: types[Math.floor(Math.random() * types.length)], isMatch: false });
+            } else {
+                // Pick 4 distinct concepts (no matches at all)
+                let concepts = [...terms].sort(() => 0.5 - Math.random()).slice(0, 4);
+                for(let i=0; i<4; i++) {
+                    currentCards.push({ concept: concepts[i], type: types[Math.floor(Math.random() * types.length)], isMatch: false });
+                }
+            }
+            
+            // Shuffle the 4 cards
+            currentCards.sort(() => 0.5 - Math.random());
+            
+            // Record where the matching cards ended up
+            for(let i=0; i<4; i++) {
+                if(currentCards[i].isMatch) matchingIndices.push(i);
+            }
+        }
+
+        function renderCards() {
+            const grid = document.getElementById('card-grid');
+            grid.innerHTML = '';
+            
+            currentCards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                cardEl.dataset.index = index;
+                
+                let contentHtml = '';
+                if (card.type === 'word') {
+                    contentHtml = `<div class="card-word">${card.concept.word}</div>`;
+                } else if (card.type === 'definition') {
+                    contentHtml = `<div class="card-def">${card.concept.definition}</div>`;
+                } else if (card.type === 'svg') {
+                    contentHtml = `<div class="card-svg-container"><svg class="card-svg" viewBox="0 0 100 100">${card.concept.svg}</svg></div>`;
+                }
+                
+                cardEl.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front">?</div>
+                        <div class="card-back">${contentHtml}</div>
+                    </div>
+                `;
+                grid.appendChild(cardEl);
+            });
+        }
+
+        function revealMatch() {
+            document.getElementById('reveal-btn').disabled = true;
+            document.getElementById('next-btn').disabled = false;
+            
+            const statusMsg = document.getElementById('status-msg');
+            
+            if (matchExists) {
+                statusMsg.innerText = "Match Found!";
+                statusMsg.style.color = "#38a169";
+                
+                const cards = document.querySelectorAll('.card');
+                matchingIndices.forEach(idx => {
+                    cards[idx].classList.add('highlight');
+                });
+            } else {
+                statusMsg.innerText = "No Match!";
+                statusMsg.style.color = "#e53e3e";
+            }
+        }
+
+        function showGameOver() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('game-over-screen').style.display = 'flex';
+            
+            const maxScore = Math.max(...scores);
+            let winners = [];
+            scores.forEach((s, i) => { if(s === maxScore) winners.push(`Group ${i+1}`); });
+            
+            const winnerText = document.getElementById('winner-text');
+            if (maxScore === 0) {
+                winnerText.innerText = "No points scored this game!";
+            } else {
+                winnerText.innerText = `Winner: ${winners.join(' and ')} with ${maxScore} points!`;
+            }
+        }
+    </script>
+</body>
+</html>

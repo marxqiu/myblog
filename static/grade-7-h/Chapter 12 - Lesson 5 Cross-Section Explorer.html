@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 12 Lesson 5 - Cross-Section Explorer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Georgia", serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      padding: 28px 20px 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: min(1040px, 100%);
+      display: grid;
+      grid-template-columns: minmax(290px, 350px) minmax(360px, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+      padding: 16px 18px;
+    }
+
+    h1 {
+      font-size: 1.18rem;
+      margin-bottom: 6px;
+      color: #0f172a;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      font-size: 0.84rem;
+      color: #64748b;
+      line-height: 1.45;
+      margin-bottom: 14px;
+    }
+
+    .control-block { margin-bottom: 14px; }
+    .control-block:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      color: #64748b;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    select, input[type="range"] {
+      width: 100%;
+      accent-color: #2563eb;
+    }
+
+    select {
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      padding: 9px 11px;
+      background: #ffffff;
+      font-family: inherit;
+      color: #1e293b;
+      font-size: 0.94rem;
+    }
+
+    .dir-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .dir-btn {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 9px 10px;
+      background: #f8fafc;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      color: #334155;
+      font-size: 0.9rem;
+      transition: 0.14s ease;
+    }
+
+    .dir-btn:hover { background: #eff6ff; }
+    .dir-btn.active {
+      background: #dbeafe;
+      border-color: #2563eb;
+      color: #1d4ed8;
+    }
+
+    .range-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.86rem;
+      color: #475569;
+    }
+
+    .pill {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 0.74rem;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+    }
+
+    .pill.good {
+      background: #ecfdf5;
+      border-color: #6ee7b7;
+      color: #065f46;
+    }
+
+    .pill.warn {
+      background: #fef2f2;
+      border-color: #fca5a5;
+      color: #991b1b;
+    }
+
+    .notes {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 0.82rem;
+      color: #475569;
+      line-height: 1.45;
+    }
+
+    .view h2 {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      color: #0f172a;
+      letter-spacing: 0.02em;
+    }
+
+    .top-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 0.8rem;
+      color: #475569;
+    }
+
+    .canvas-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .canvas-block h3 {
+      font-size: 0.8rem;
+      color: #475569;
+      margin-bottom: 6px;
+      font-weight: normal;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 480px;
+      aspect-ratio: 1 / 1;
+      border: 1px solid #dbe2ea;
+      border-radius: 12px;
+      background: #ffffff;
+      display: block;
+    }
+
+    .caption {
+      margin-top: 10px;
+      font-size: 0.83rem;
+      color: #64748b;
+      line-height: 1.45;
+    }
+
+    .legend {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      font-size: 0.77rem;
+      color: #64748b;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+      transform: translateY(1px);
+    }
+
+    .footnote {
+      margin-top: 14px;
+      font-size: 0.76rem;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 920px) {
+      .app { grid-template-columns: 1fr; }
+      .canvas-grid { grid-template-columns: 1fr; }
+      canvas { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card">
+      <h1>Cross-Section Explorer</h1>
+      <p class="subtitle">
+        Choose a solid, choose a cutting direction, then slide where the cut happens.
+        The right panel shows the exact cross-section for that cut.
+      </p>
+
+      <div class="control-block">
+        <label for="solidSelect">Solid</label>
+        <select id="solidSelect"></select>
+      </div>
+
+      <div class="control-block">
+        <label>Cut direction</label>
+        <div class="dir-group" id="directionButtons"></div>
+      </div>
+
+      <div class="control-block">
+        <div class="range-row">
+          <span>Cut position</span>
+          <strong id="positionLabel">0%</strong>
+        </div>
+        <input id="cutSlider" type="range" min="-100" max="100" value="0" step="1">
+      </div>
+
+      <div class="control-block">
+        <div class="range-row">
+          <span>Section pattern</span>
+          <span id="uniformBadge" class="pill">Checking...</span>
+        </div>
+        <div class="notes" id="solidNotes"></div>
+      </div>
+    </section>
+
+    <section class="card view">
+      <h2>Cross-section at current cut</h2>
+      <div class="top-metrics">
+        <span class="pill" id="shapePill">Shape: -</span>
+        <span class="pill" id="areaPill">Relative area: -</span>
+        <span class="pill" id="statePill">State: -</span>
+      </div>
+      <div class="canvas-grid">
+        <div class="canvas-block">
+          <h3>3D solid + cutting plane</h3>
+          <canvas id="solidCanvas" width="480" height="480"></canvas>
+        </div>
+        <div class="canvas-block">
+          <h3>Resulting cross-section</h3>
+          <canvas id="crossCanvas" width="480" height="480"></canvas>
+        </div>
+      </div>
+      <p class="caption" id="captionText"></p>
+      <div class="legend">
+        <span><span class="dot" style="background:#f43f5e"></span>Cutting plane (3D)</span>
+        <span><span class="dot" style="background:#64748b"></span>Solid shell (3D)</span>
+        <span><span class="dot" style="background:#0ea5e9"></span>Cross-section region</span>
+        <span><span class="dot" style="background:#94a3b8"></span>Reference grid</span>
+        <span><span class="dot" style="background:#f59e0b"></span>Boundary points</span>
+      </div>
+      <p class="footnote">
+        Tip: For a solid of <strong>uniform cross-section</strong>, moving the slider should keep both shape and size unchanged
+        in the special direction parallel to its two ends.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const crossCanvas = document.getElementById("crossCanvas");
+    const ctx = crossCanvas.getContext("2d");
+    const solidCanvas = document.getElementById("solidCanvas");
+    const sctx = solidCanvas.getContext("2d");
+
+    const solidSelect = document.getElementById("solidSelect");
+    const directionButtons = document.getElementById("directionButtons");
+    const cutSlider = document.getElementById("cutSlider");
+    const positionLabel = document.getElementById("positionLabel");
+    const uniformBadge = document.getElementById("uniformBadge");
+    const solidNotes = document.getElementById("solidNotes");
+    const shapePill = document.getElementById("shapePill");
+    const areaPill = document.getElementById("areaPill");
+    const statePill = document.getElementById("statePill");
+    const captionText = document.getElementById("captionText");
+
+    const DIRECTIONS = [
+      { key: "z", label: "Parallel to ends (slice z = constant)" },
+      { key: "x", label: "Left-right cut (slice x = constant)" },
+      { key: "y", label: "Front-back cut (slice y = constant)" }
+    ];
+
+    const solids = [
+      {
+        id: "A",
+        name: "Solid A - Rectangular prism (box)",
+        note: "A prism is uniform in the direction parallel to its two equal end faces.",
+        shapeHints: { z: "Rectangle", x: "Rectangle", y: "Rectangle" },
+        inside(x, y, z) {
+          return Math.abs(x) <= 0.72 && Math.abs(y) <= 0.48 && Math.abs(z) <= 1;
+        }
+      },
+      {
+        id: "B",
+        name: "Solid B - Cone",
+        note: "A cone tapers to a point, so size changes as you move the cut.",
+        shapeHints: { z: "Circle (radius changes)", x: "Triangle-like", y: "Triangle-like" },
+        inside(x, y, z) {
+          if (z < -1 || z > 1) return false;
+          const radius = ((1 - z) / 2) * 0.88;
+          return x * x + y * y <= radius * radius;
+        }
+      },
+      {
+        id: "C",
+        name: "Solid C - Triangular prism",
+        note: "Prisms keep a fixed end shape; only the position changes along the length.",
+        shapeHints: { z: "Triangle", x: "Rectangle / trapezoid", y: "Rectangle / segment" },
+        inside(x, y, z) {
+          if (z < -1 || z > 1) return false;
+          if (y < -0.62 || y > 0.68) return false;
+          const halfWidth = (0.68 - y) * 0.72;
+          return Math.abs(x) <= halfWidth;
+        }
+      },
+      {
+        id: "D",
+        name: "Solid D - Sphere",
+        note: "A sphere has no pair of flat ends, so section size changes with height.",
+        shapeHints: { z: "Circle (radius changes)", x: "Circle (radius changes)", y: "Circle (radius changes)" },
+        inside(x, y, z) {
+          return x * x + y * y + z * z <= 0.86 * 0.86;
+        }
+      },
+      {
+        id: "E",
+        name: "Solid E - Cylinder",
+        note: "A cylinder is uniform when sliced parallel to its circular ends.",
+        shapeHints: { z: "Circle", x: "Rectangle", y: "Rectangle" },
+        inside(x, y, z) {
+          return z >= -1 && z <= 1 && (x * x + y * y <= 0.72 * 0.72);
+        }
+      },
+      {
+        id: "F",
+        name: "Solid F - Square pyramid",
+        note: "A pyramid narrows toward one vertex, so cross-sections shrink.",
+        shapeHints: { z: "Square (size changes)", x: "Triangle-like", y: "Triangle-like" },
+        inside(x, y, z) {
+          if (z < -1 || z > 1) return false;
+          const half = ((1 - z) / 2) * 0.78;
+          return Math.abs(x) <= half && Math.abs(y) <= half;
+        }
+      },
+      {
+        id: "G",
+        name: "Solid G - L-shaped prism",
+        note: "This is still a prism, so slices parallel to matching L-shaped ends stay identical.",
+        shapeHints: { z: "L-shape", x: "Step-like", y: "Step-like" },
+        inside(x, y, z) {
+          if (z < -1 || z > 1) return false;
+          const verticalBar = x >= -0.78 && x <= -0.16 && y >= -0.62 && y <= 0.62;
+          const bottomBar = x >= -0.78 && x <= 0.66 && y >= -0.62 && y <= -0.16;
+          return verticalBar || bottomBar;
+        }
+      },
+      {
+        id: "H",
+        name: "Solid H - Frustum (truncated cone)",
+        note: "The ends are different sizes, so sections change continuously between them.",
+        shapeHints: { z: "Circle (radius changes)", x: "Trapezoid-like", y: "Trapezoid-like" },
+        inside(x, y, z) {
+          if (z < -1 || z > 1) return false;
+          const t = (z + 1) / 2;
+          const radius = 0.9 + (0.38 - 0.9) * t;
+          return x * x + y * y <= radius * radius;
+        }
+      }
+    ];
+
+    let currentSolid = solids[0];
+    let currentDirection = "z";
+    const shellCache = new Map();
+
+    function worldPoint(direction, cutValue, u, v) {
+      if (direction === "z") return [u, v, cutValue];
+      if (direction === "x") return [cutValue, u, v];
+      return [u, cutValue, v];
+    }
+
+    function evaluateSlice(solid, direction, cutValue, samples = 180) {
+      const insideMap = new Uint8Array(samples * samples);
+      let insideCount = 0;
+
+      for (let j = 0; j < samples; j++) {
+        const v = -1 + ((j + 0.5) / samples) * 2;
+        for (let i = 0; i < samples; i++) {
+          const u = -1 + ((i + 0.5) / samples) * 2;
+          const [x, y, z] = worldPoint(direction, cutValue, u, v);
+          const inside = solid.inside(x, y, z);
+          const idx = j * samples + i;
+          insideMap[idx] = inside ? 1 : 0;
+          if (inside) insideCount++;
+        }
+      }
+
+      const relativeArea = (insideCount / (samples * samples)) * 4;
+      return { insideMap, samples, insideCount, relativeArea };
+    }
+
+    function makeRng(seed) {
+      let s = seed >>> 0;
+      return function next() {
+        s = (1664525 * s + 1013904223) >>> 0;
+        return s / 4294967296;
+      };
+    }
+
+    function getShellPoints(solid, density = 1500) {
+      const cacheKey = `${solid.id}:${density}`;
+      if (shellCache.has(cacheKey)) return shellCache.get(cacheKey);
+
+      const pts = [];
+      const rng = makeRng(0x9e3779b9 + solid.id.charCodeAt(0) * 4093);
+      const eps = 0.08;
+      const offsets = [
+        [eps, 0, 0], [-eps, 0, 0],
+        [0, eps, 0], [0, -eps, 0],
+        [0, 0, eps], [0, 0, -eps]
+      ];
+
+      let attempts = 0;
+      const maxAttempts = density * 20;
+      while (pts.length < density && attempts < maxAttempts) {
+        attempts++;
+        const x = -1 + rng() * 2;
+        const y = -1 + rng() * 2;
+        const z = -1 + rng() * 2;
+        if (!solid.inside(x, y, z)) continue;
+
+        let isSurface = false;
+        for (const [dx, dy, dz] of offsets) {
+          if (!solid.inside(x + dx, y + dy, z + dz)) {
+            isSurface = true;
+            break;
+          }
+        }
+        if (isSurface) pts.push({ x, y, z });
+      }
+
+      shellCache.set(cacheKey, pts);
+      return pts;
+    }
+
+    function approxUniformity(solid, direction) {
+      const testCuts = [-0.9, -0.45, 0, 0.45, 0.9];
+      const areas = testCuts.map((k) => evaluateSlice(solid, direction, k, 90).relativeArea);
+      const max = Math.max(...areas);
+      const min = Math.min(...areas);
+      if (max < 0.001) return { uniform: false, changeRatio: 1 };
+      return { uniform: (max - min) / max < 0.07, changeRatio: (max - min) / max };
+    }
+
+    function drawGrid() {
+      const W = crossCanvas.width;
+      const H = crossCanvas.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 1;
+      const step = W / 12;
+      for (let i = 0; i <= 12; i++) {
+        const p = i * step;
+        ctx.beginPath();
+        ctx.moveTo(p, 0);
+        ctx.lineTo(p, H);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, p);
+        ctx.lineTo(W, p);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(W / 2, 0);
+      ctx.lineTo(W / 2, H);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, H / 2);
+      ctx.lineTo(W, H / 2);
+      ctx.stroke();
+    }
+
+    function drawSlice(slice) {
+      const W = crossCanvas.width;
+      const H = crossCanvas.height;
+      const { insideMap, samples } = slice;
+      const px = W / samples;
+      const py = H / samples;
+
+      ctx.fillStyle = "rgba(14, 165, 233, 0.78)";
+      for (let j = 0; j < samples; j++) {
+        let runStart = -1;
+        for (let i = 0; i <= samples; i++) {
+          const val = i < samples ? insideMap[j * samples + i] : 0;
+          if (val && runStart < 0) runStart = i;
+          if ((!val || i === samples) && runStart >= 0) {
+            const len = i - runStart;
+            ctx.fillRect(runStart * px, j * py, len * px, py + 0.35);
+            runStart = -1;
+          }
+        }
+      }
+
+      // Boundary highlights to help students see shape edges.
+      ctx.fillStyle = "rgba(245, 158, 11, 0.9)";
+      for (let j = 1; j < samples - 1; j += 2) {
+        for (let i = 1; i < samples - 1; i += 2) {
+          const idx = j * samples + i;
+          if (!insideMap[idx]) continue;
+          const edge =
+            insideMap[idx - 1] === 0 ||
+            insideMap[idx + 1] === 0 ||
+            insideMap[idx - samples] === 0 ||
+            insideMap[idx + samples] === 0;
+          if (edge) {
+            ctx.fillRect(i * px, j * py, Math.max(1.2, px * 0.75), Math.max(1.2, py * 0.75));
+          }
+        }
+      }
+    }
+
+    function project3D(x, y, z, width, height) {
+      const yaw = 0.78;
+      const pitch = -0.52;
+
+      const x1 = x * Math.cos(yaw) + z * Math.sin(yaw);
+      const z1 = -x * Math.sin(yaw) + z * Math.cos(yaw);
+      const y1 = y * Math.cos(pitch) - z1 * Math.sin(pitch);
+      const z2 = y * Math.sin(pitch) + z1 * Math.cos(pitch);
+
+      const scale = Math.min(width, height) * 0.28;
+      return {
+        sx: width / 2 + x1 * scale,
+        sy: height / 2 - y1 * scale,
+        depth: z2
+      };
+    }
+
+    function drawSolidSchematic(solid, direction, cutValue) {
+      const W = solidCanvas.width;
+      const H = solidCanvas.height;
+      sctx.clearRect(0, 0, W, H);
+      sctx.fillStyle = "#ffffff";
+      sctx.fillRect(0, 0, W, H);
+
+      sctx.strokeStyle = "#e2e8f0";
+      sctx.lineWidth = 1;
+      sctx.strokeRect(1, 1, W - 2, H - 2);
+
+      const shell = getShellPoints(solid, 1400);
+      const projected = shell.map((p) => ({ ...project3D(p.x, p.y, p.z, W, H), ...p }));
+      projected.sort((a, b) => a.depth - b.depth);
+
+      for (const p of projected) {
+        const tone = Math.max(70, Math.min(170, 115 + p.depth * 65));
+        sctx.fillStyle = `rgba(${tone}, ${tone}, ${tone + 10}, 0.55)`;
+        sctx.beginPath();
+        sctx.arc(p.sx, p.sy, 1.35, 0, Math.PI * 2);
+        sctx.fill();
+      }
+
+      const corners = [
+        [-1, -1], [1, -1], [1, 1], [-1, 1]
+      ].map(([a, b]) => {
+        if (direction === "z") return project3D(a, b, cutValue, W, H);
+        if (direction === "x") return project3D(cutValue, a, b, W, H);
+        return project3D(a, cutValue, b, W, H);
+      });
+
+      sctx.beginPath();
+      corners.forEach((pt, idx) => {
+        if (idx === 0) sctx.moveTo(pt.sx, pt.sy);
+        else sctx.lineTo(pt.sx, pt.sy);
+      });
+      sctx.closePath();
+      sctx.fillStyle = "rgba(244, 63, 94, 0.25)";
+      sctx.fill();
+      sctx.strokeStyle = "rgba(225, 29, 72, 0.9)";
+      sctx.lineWidth = 2;
+      sctx.stroke();
+
+      const axis = [
+        { to: [0.95, 0, 0], label: "x", color: "#0ea5e9" },
+        { to: [0, 0.95, 0], label: "y", color: "#22c55e" },
+        { to: [0, 0, 0.95], label: "z", color: "#a855f7" }
+      ];
+      const origin = project3D(0, 0, 0, W, H);
+      axis.forEach((a) => {
+        const end = project3D(a.to[0], a.to[1], a.to[2], W, H);
+        sctx.beginPath();
+        sctx.moveTo(origin.sx, origin.sy);
+        sctx.lineTo(end.sx, end.sy);
+        sctx.strokeStyle = a.color;
+        sctx.lineWidth = 1.6;
+        sctx.stroke();
+        sctx.fillStyle = a.color;
+        sctx.font = "12px Georgia";
+        sctx.fillText(a.label, end.sx + 4, end.sy - 2);
+      });
+    }
+
+    function formatPercentFromSlider() {
+      const v = Number(cutSlider.value);
+      if (v === 0) return "0% (middle)";
+      return `${v > 0 ? "+" : ""}${v}%`;
+    }
+
+    function render() {
+      const cutValue = Number(cutSlider.value) / 100;
+      const slice = evaluateSlice(currentSolid, currentDirection, cutValue, 180);
+      const uniform = approxUniformity(currentSolid, currentDirection);
+
+      drawSolidSchematic(currentSolid, currentDirection, cutValue);
+      drawGrid();
+      if (slice.insideCount > 0) drawSlice(slice);
+
+      positionLabel.textContent = formatPercentFromSlider();
+      solidNotes.textContent = currentSolid.note;
+
+      const hint = currentSolid.shapeHints[currentDirection] || "Unknown";
+      shapePill.textContent = `Shape: ${hint}`;
+      areaPill.textContent = `Relative area: ${slice.relativeArea.toFixed(3)}`;
+
+      if (slice.insideCount === 0) {
+        statePill.textContent = "State: no intersection";
+        statePill.className = "pill warn";
+      } else {
+        statePill.textContent = "State: valid slice";
+        statePill.className = "pill good";
+      }
+
+      if (uniform.uniform) {
+        uniformBadge.textContent = "Size stays (approximately) constant";
+        uniformBadge.className = "pill good";
+      } else {
+        uniformBadge.textContent = `Size changes (${Math.round(uniform.changeRatio * 100)}% range)`;
+        uniformBadge.className = "pill warn";
+      }
+
+      captionText.textContent =
+        `Current solid: ${currentSolid.name}. Direction: ${DIRECTIONS.find((d) => d.key === currentDirection).label}. ` +
+        `Move the slider to compare how this cross-section changes.`;
+    }
+
+    function buildSolidOptions() {
+      solids.forEach((solid) => {
+        const option = document.createElement("option");
+        option.value = solid.id;
+        option.textContent = solid.name;
+        solidSelect.appendChild(option);
+      });
+      solidSelect.value = currentSolid.id;
+    }
+
+    function buildDirectionButtons() {
+      directionButtons.innerHTML = "";
+      DIRECTIONS.forEach((dir) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `dir-btn${dir.key === currentDirection ? " active" : ""}`;
+        button.textContent = dir.label;
+        button.addEventListener("click", () => {
+          currentDirection = dir.key;
+          [...directionButtons.children].forEach((node) => node.classList.remove("active"));
+          button.classList.add("active");
+          render();
+        });
+        directionButtons.appendChild(button);
+      });
+    }
+
+    solidSelect.addEventListener("change", (event) => {
+      currentSolid = solids.find((s) => s.id === event.target.value) || solids[0];
+      render();
+    });
+
+    cutSlider.addEventListener("input", render);
+
+    buildSolidOptions();
+    buildDirectionButtons();
+    render();
+  </script>
+</body>
+</html>

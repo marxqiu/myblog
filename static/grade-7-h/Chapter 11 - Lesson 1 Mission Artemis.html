@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mission Artemis — Launch Clearance Dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #eef2f7;
+    color: #1a202c;
+    padding: 28px;
+    font-size: 14px;
+  }
+
+  /* ── MISSION HEADER ── */
+  .mission-header {
+    background: #08152b;
+    color: white;
+    padding: 28px 36px;
+    border-radius: 10px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mission-header::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 40%;
+    background: radial-gradient(ellipse at right center, #1a3a6b 0%, transparent 70%);
+  }
+  .mission-header .badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3.5px;
+    color: #4a90d9;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .mission-header h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 26px;
+    letter-spacing: 3px;
+    line-height: 1.2;
+    position: relative;
+  }
+  .mission-header h1 span { color: #4a90d9; }
+  .mission-header .subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 6px;
+    font-style: italic;
+    position: relative;
+  }
+  .meta-row {
+    display: flex;
+    gap: 36px;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid #1e3a5f;
+    position: relative;
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .meta-item .key {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #64748b;
+    text-transform: uppercase;
+  }
+  .meta-item .val {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: #e2e8f0;
+  }
+
+  /* ── PHASE INSTRUCTIONS ── */
+  .phase-instructions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .phase-box {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid;
+  }
+  .phase-box.p1 { border-color: #d97706; }
+  .phase-box.p2 { border-color: #16a34a; }
+  .phase-box .ph-head {
+    padding: 10px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .phase-box.p1 .ph-head { background: #d97706; }
+  .phase-box.p2 .ph-head { background: #16a34a; }
+  .phase-box .ph-body {
+    background: white;
+    padding: 12px 16px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #374151;
+  }
+  .phase-box .ph-body strong { color: #1a202c; }
+  .rule-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    margin-top: 6px;
+    font-weight: bold;
+  }
+  .p1 .rule-tag { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .p2 .rule-tag { background: #dcfce7; color: #14532d; border: 1px solid #86efac; }
+
+  /* ── TEAM CARDS ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  .team-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .card-header {
+    padding: 14px 20px;
+    color: white;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-header .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    flex-shrink: 0;
+  }
+  .eng .card-header { background: #991b1b; }
+  .mc .card-header { background: #1e3a8a; }
+  .card-body { padding: 18px 20px; }
+  .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  /* ── MEASUREMENT TABLE ── */
+  .meas-table { width: 100%; border-collapse: collapse; }
+  .meas-table th {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: #94a3b8;
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 2px solid #e2e8f0;
+    text-transform: uppercase;
+  }
+  .meas-table td { padding: 11px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  .meas-table tr:last-child td { border-bottom: none; }
+
+  .ref-label {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 16px;
+    width: 28px;
+    display: inline-block;
+    text-align: center;
+  }
+  .eng .ref-label { color: #b91c1c; }
+  .mc .ref-label { color: #1d4ed8; }
+
+  .desc { font-size: 12.5px; color: #374151; line-height: 1.4; }
+  .meas-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 17px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .eng .meas-val { color: #b91c1c; }
+  .mc .meas-val { color: #1d4ed8; }
+  .unit-badge {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #475569;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+    border: 1px solid #e2e8f0;
+  }
+
+  /* ── HANDOFF LOG ── */
+  .handoff-section {
+    border-top: 2px dashed #e2e8f0;
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+  .handoff-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .handoff-rows { display: flex; flex-direction: column; gap: 7px; }
+  .handoff-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .handoff-ref {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .eng .handoff-ref { color: #b91c1c; }
+  .mc .handoff-ref { color: #1d4ed8; }
+  .fill-box {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 5px;
+    height: 32px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    gap: 6px;
+  }
+  .fill-box .num-slot { flex: 1; border-bottom: 1px solid #cbd5e0; height: 20px; }
+  .fill-box .unit-slot { width: 36px; border-bottom: 1px solid #cbd5e0; height: 20px; }
+  .fill-box .unit-label { font-size: 9px; color: #94a3b8; font-family: 'Space Mono'; }
+  .phase-chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+  }
+  .chip-p1 { background: #fef3c7; color: #92400e; }
+  .chip-p2 { background: #dcfce7; color: #14532d; }
+
+  /* ── QUESTIONS SHEET ── */
+  .questions-section {
+    background: white;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    overflow: hidden;
+    margin-bottom: 28px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .questions-header {
+    background: #08152b;
+    padding: 14px 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .questions-header span { color: #4a90d9; }
+  .questions-body { padding: 22px 24px; }
+
+  .phase-section { margin-bottom: 22px; }
+  .phase-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+  .pill-p1 { background: #fef3c7; color: #92400e; border: 1.5px solid #fcd34d; }
+  .pill-p2 { background: #dcfce7; color: #14532d; border: 1.5px solid #86efac; }
+  .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .pill-p1 .pill-dot { background: #d97706; }
+  .pill-p2 .pill-dot { background: #16a34a; }
+
+  .question {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .question .q-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #64748b;
+    margin-bottom: 7px;
+    text-transform: uppercase;
+  }
+  .question p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #1e293b;
+  }
+  .question .ref-code {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .eng-ref { color: #b91c1c; }
+  .mc-ref { color: #1d4ed8; }
+  .answer-area {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed #e2e8f0;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    font-size: 11px;
+    color: #94a3b8;
+    font-family: 'Space Mono', monospace;
+  }
+  .answer-area .ans-label { white-space: nowrap; }
+  .answer-line { flex: 1; border-bottom: 1.5px solid #cbd5e0; }
+
+  .bonus-q {
+    border-style: dashed;
+    border-color: #c7d2fe;
+    background: #f8faff;
+  }
+  .bonus-badge {
+    position: absolute;
+    top: 12px; right: 14px;
+    background: #6366f1;
+    color: white;
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+
+  /* ── SCORING ── */
+  .scoring-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  .score-card {
+    background: white;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    overflow: hidden;
+  }
+  .score-card .sc-head {
+    padding: 10px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: white;
+    text-transform: uppercase;
+  }
+  .sc-p1 .sc-head { background: #d97706; }
+  .sc-p2 .sc-head { background: #16a34a; }
+  .score-card .sc-body { padding: 14px 18px; }
+  .score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 12.5px;
+  }
+  .score-row:last-child { border-bottom: none; }
+  .score-pts {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .sc-p1 .score-pts { color: #d97706; }
+  .sc-p2 .score-pts { color: #16a34a; }
+
+  /* ── TEACHER KEY ── */
+  .teacher-key {
+    background: white;
+    border-radius: 10px;
+    border: 2px solid #fbbf24;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(251,191,36,0.15);
+  }
+  .key-header {
+    background: #f59e0b;
+    padding: 12px 22px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #1a202c;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .key-body { padding: 20px 22px; }
+  .key-conversions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #fef3c7;
+  }
+  .conv-group { font-size: 12.5px; }
+  .conv-group .cg-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .conv-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+  }
+  .conv-arrow { color: #94a3b8; font-size: 10px; }
+  .eng-val { color: #b91c1c; font-weight: 700; }
+  .mc-val { color: #1d4ed8; font-weight: 700; }
+  .m-val { color: #059669; font-weight: 700; }
+
+  .key-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .key-q {
+    border: 1.5px solid #fde68a;
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: #fffbeb;
+  }
+  .key-q .kq-ref {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 11px;
+    color: #92400e;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .key-q .kq-row { font-size: 12px; margin-bottom: 4px; line-height: 1.5; }
+  .key-q .wrong { color: #dc2626; font-family: 'Space Mono', monospace; font-size: 11.5px; }
+  .key-q .right { color: #16a34a; font-family: 'Space Mono', monospace; font-size: 11.5px; font-weight: 700; }
+  .key-q .working { color: #475569; font-family: 'Space Mono', monospace; font-size: 10.5px; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: white; padding: 16px; }
+    .mission-header { border-radius: 0; }
+    .teacher-key { break-before: page; }
+    .questions-section { break-inside: avoid; }
+  }
+
+  /* ── UTILITY ── */
+  .divider { border: none; border-top: 2px dashed #e2e8f0; margin: 24px 0; }
+  .section-note {
+    background: #f8fafc;
+    border-left: 3px solid #94a3b8;
+    padding: 8px 14px;
+    font-size: 11.5px;
+    color: #475569;
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     MISSION HEADER
+══════════════════════════════════════ -->
+<div class="mission-header">
+  <div class="badge">▸ EDUCATIONAL MISSION SIMULATION · GRADE 7 MATHEMATICS</div>
+  <h1>MISSION <span>ARTEMIS</span><br>LAUNCH CLEARANCE DOSSIER</h1>
+  <div class="subtitle">Unit Conversion Inter-Team Protocol Exercise</div>
+  <div class="meta-row">
+    <div class="meta-item"><span class="key">Chapter</span><span class="val">11 — Measurement</span></div>
+    <div class="meta-item"><span class="key">Objective</span><span class="val">Length Unit Conversion</span></div>
+    <div class="meta-item"><span class="key">Teams</span><span class="val">Engineering · Mission Control</span></div>
+    <div class="meta-item"><span class="key">Duration</span><span class="val">≈ 20 minutes</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PHASE INSTRUCTIONS
+══════════════════════════════════════ -->
+<div class="phase-instructions">
+  <div class="phase-box p1">
+    <div class="ph-head">⚠ PHASE 1 — BROKEN PROTOCOL</div>
+    <div class="ph-body">
+      Engineering Team: write <strong>only the number</strong> (no unit) in the Handoff Log on your card.<br>
+      Mission Control: receive the numbers and use them directly to answer Q1–Q4.<br>
+      <span class="rule-tag">RULE: NO UNITS MAY BE SPOKEN OR WRITTEN DURING HANDOFF</span>
+    </div>
+  </div>
+  <div class="phase-box p2">
+    <div class="ph-head">✓ PHASE 2 — FIXED PROTOCOL</div>
+    <div class="ph-body">
+      Engineering Team: write the number <strong>AND the unit</strong> in the Phase 2 Handoff Log.<br>
+      Mission Control: convert <strong>every measurement to metres</strong> before answering Q1–Q4.<br>
+      <span class="rule-tag">FIRST GROUP WITH ALL 4 CORRECT ANSWERS LAUNCHES ✓</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TEAM CARDS
+══════════════════════════════════════ -->
+<div class="cards-grid">
+
+  <!-- ENGINEERING CARD -->
+  <div class="team-card eng">
+    <div class="card-header">
+      <div class="dot"></div>
+      ENGINEERING TEAM — COMPONENT DATA
+    </div>
+    <div class="card-body">
+      <div class="card-label">Your measurements (small units)</div>
+      <table class="meas-table">
+        <tr>
+          <th>Ref</th>
+          <th>Component</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td><span class="ref-label eng">A</span></td>
+          <td><div class="desc">Thruster array length</div></td>
+          <td><span class="meas-val">450</span><span class="unit-badge">cm</span></td>
+        </tr>
+        <tr>
+          <td><span class="ref-label eng">B</span></td>
+          <td><div class="desc">Solar panel width<br><small style="color:#94a3b8">(one panel only)</small></div></td>
+          <td><span class="meas-val">2 500</span><span class="unit-badge">mm</span></td>
+        </tr>
+        <tr>
+          <td><span class="ref-label eng">C</span></td>
+          <td><div class="desc">Docking collar diameter</div></td>
+          <td><span class="meas-val">80</span><span class="unit-badge">cm</span></td>
+        </tr>
+        <tr>
+          <td><span class="ref-label eng">D</span></td>
+          <td><div class="desc">Antenna dish radius</div></td>
+          <td><span class="meas-val">750</span><span class="unit-badge">mm</span></td>
+        </tr>
+      </table>
+
+      <!-- HANDOFF LOG -->
+      <div class="handoff-section">
+        <div class="handoff-title">▸ Handoff Log — fill in before passing to Mission Control</div>
+        <div class="handoff-rows">
+          <div class="handoff-row">
+            <span class="handoff-ref eng">A</span>
+            <div>
+              <div style="font-size:9px;color:#94a3b8;font-family:'Space Mono';letter-spacing:1px;margin-bottom:3px">PHASE 1 (number only)</div>
+              <div class="fill-box"><div class="num-slot"></div></div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:#94a3b8;font-family:'Space Mono';letter-spacing:1px;margin-bottom:3px">PHASE 2 (number + unit)</div>
+              <div class="fill-box"><div class="num-slot"></div><div style="font-size:9px;color:#94a3b8">unit:</div><div class="unit-slot"></div></div>
+            </div>
+          </div>
+          <div class="handoff-row">
+            <span class="handoff-ref eng">B</span>
+            <div>
+              <div class="fill-box"><div class="num-slot"></div></div>
+            </div>
+            <div>
+              <div class="fill-box"><div class="num-slot"></div><div style="font-size:9px;color:#94a3b8">unit:</div><div class="unit-slot"></div></div>
+            </div>
+          </div>
+          <div class="handoff-row">
+            <span class="handoff-ref eng">C</span>
+            <div>
+              <div class="fill-box"><div class="num-slot"></div></div>
+            </div>
+            <div>
+              <div class="fill-box"><div class="num-slot"></div><div style="font-size:9px;color:#94a3b8">unit:</div><div class="unit-slot"></div></div>
+            </div>
+          </div>
+          <div class="handoff-row">
+            <span class="handoff-ref eng">D</span>
+            <div>
+              <div class="fill-box"><div class="num-slot"></div></div>
+            </div>
+            <div>
+              <div class="fill-box"><div class="num-slot"></div><div style="font-size:9px;color:#94a3b8">unit:</div><div class="unit-slot"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MISSION CONTROL CARD -->
+  <div class="team-card mc">
+    <div class="card-header">
+      <div class="dot"></div>
+      MISSION CONTROL — FLIGHT DATA
+    </div>
+    <div class="card-body">
+      <div class="card-label">Your measurements (large units)</div>
+      <table class="meas-table">
+        <tr>
+          <th>Ref</th>
+          <th>Parameter</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td><span class="ref-label mc">W</span></td>
+          <td><div class="desc">Spacecraft body length</div></td>
+          <td><span class="meas-val">6.5</span><span class="unit-badge">m</span></td>
+        </tr>
+        <tr>
+          <td><span class="ref-label mc">X</span></td>
+          <td><div class="desc">Launch vehicle<br>inner length</div></td>
+          <td><span class="meas-val">11.0</span><span class="unit-badge">m</span></td>
+        </tr>
+        <tr>
+          <td><span class="ref-label mc">Y</span></td>
+          <td><div class="desc">Orbital insertion<br>distance</div></td>
+          <td><span class="meas-val">1.2</span><span class="unit-badge">km</span></td>
+        </tr>
+        <tr>
+          <td><span class="ref-label mc">Z</span></td>
+          <td><div class="desc">Staging orbit<br>clearance radius</div></td>
+          <td><span class="meas-val">0.085</span><span class="unit-badge">km</span></td>
+        </tr>
+      </table>
+
+      <!-- RECEIVED DATA -->
+      <div class="handoff-section">
+        <div class="handoff-title">▸ Received from Engineering — record here</div>
+        <div class="handoff-rows">
+          <div class="handoff-row">
+            <span class="handoff-ref mc">A</span>
+            <div>
+              <div style="font-size:9px;color:#94a3b8;font-family:'Space Mono';letter-spacing:1px;margin-bottom:3px">PHASE 1 received</div>
+              <div class="fill-box"><div class="num-slot"></div></div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:#94a3b8;font-family:'Space Mono';letter-spacing:1px;margin-bottom:3px">PHASE 2 → convert to m</div>
+              <div class="fill-box"><div class="num-slot"></div><div style="font-size:9px;color:#94a3b8">= </div><div class="unit-slot"></div><div style="font-size:9px;color:#059669;font-family:'Space Mono'">m</div></div>
+            </div>
+          </div>
+          <div class="handoff-row">
+            <span class="handoff-ref mc">B</span>
+            <div><div class="fill-box"><div class="num-slot"></div></div></div>
+            <div><div class="fill-box"><div class="num-slot"></div><div style="font-size:9px;color:#94a3b8">= </div><div class="unit-slot"></div><div style="font-size:9px;color:#059669;font-family:'Space Mono'">m</div></div></div>
+          </div>
+          <div class="handoff-row">
+            <span class="handoff-ref mc">C</span>
+            <div><div class="fill-box"><div class="num-slot"></div></div></div>
+            <div><div class="fill-box"><div class="num-slot"></div><div style="font-size:9px;color:#94a3b8">= </div><div class="unit-slot"></div><div style="font-size:9px;color:#059669;font-family:'Space Mono'">m</div></div></div>
+          </div>
+          <div class="handoff-row">
+            <span class="handoff-ref mc">D</span>
+            <div><div class="fill-box"><div class="num-slot"></div></div></div>
+            <div><div class="fill-box"><div class="num-slot"></div><div style="font-size:9px;color:#94a3b8">= </div><div class="unit-slot"></div><div style="font-size:9px;color:#059669;font-family:'Space Mono'">m</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     LAUNCH-CRITICAL QUESTIONS
+══════════════════════════════════════ -->
+<div class="questions-section">
+  <div class="questions-header">
+    ▸ LAUNCH-CRITICAL QUESTIONS <span>— ALL ANSWERS IN METRES</span>
+  </div>
+  <div class="questions-body">
+
+    <div class="section-note">
+      Mission Control completes these questions using the data received from Engineering. All answers must be in <strong>metres</strong>. Show your working.
+    </div>
+
+    <!-- PHASE 1 questions -->
+    <div class="phase-section">
+      <div class="phase-pill pill-p1"><div class="pill-dot"></div>PHASE 1 — BROKEN PROTOCOL</div>
+
+      <div class="question">
+        <div class="q-num">Question 1 — Stack Length &amp; Fit Check</div>
+        <p>
+          The total stack = spacecraft body <span class="ref-code mc-ref">W</span> + thruster array <span class="ref-code eng-ref">A</span>.
+          Does the stack fit inside the launch vehicle <span class="ref-code mc-ref">X</span>?
+          By how much (in m)?
+        </p>
+        <div class="answer-area">
+          <span class="ans-label">Stack =</span><div class="answer-line"></div>
+          <span class="ans-label">m &nbsp;|&nbsp; Fits? Y / N &nbsp;|&nbsp; Clearance =</span><div class="answer-line"></div><span>m</span>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="q-num">Question 2 — Solar Panel Clearance</div>
+        <p>
+          Both solar panels combined span = 2 × <span class="ref-code eng-ref">B</span>.
+          The staging orbit clearance radius is <span class="ref-code mc-ref">Z</span>.
+          Do both panels fit within this clearance? By how much (in m)?
+        </p>
+        <div class="answer-area">
+          <span class="ans-label">Total span =</span><div class="answer-line"></div>
+          <span class="ans-label">m &nbsp;|&nbsp; Z =</span><div class="answer-line"></div>
+          <span class="ans-label">m &nbsp;|&nbsp; Fits? Y / N</span>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="q-num">Question 3 — Full External Length</div>
+        <p>
+          Find the total external length (in m) of the spacecraft:<br>
+          Body <span class="ref-code mc-ref">W</span> + Thruster array <span class="ref-code eng-ref">A</span> + Both solar panels <span class="ref-code eng-ref">B</span> combined.
+        </p>
+        <div class="answer-area">
+          <span class="ans-label">Total =</span><div class="answer-line"></div><span>m</span>
+        </div>
+      </div>
+
+      <div class="question bonus-q">
+        <div class="bonus-badge">BONUS</div>
+        <div class="q-num">Question 4 — Docking Clearance Check</div>
+        <p>
+          The docking collar diameter <span class="ref-code eng-ref">C</span> must be <em>at least as wide</em> as the antenna dish radius <span class="ref-code eng-ref">D</span> to allow safe attachment.
+          Does it meet this requirement? By how much (in cm)?
+        </p>
+        <div class="answer-area">
+          <span class="ans-label">C =</span><div class="answer-line"></div>
+          <span class="ans-label">| D =</span><div class="answer-line"></div>
+          <span class="ans-label">| C ≥ D? Y / N &nbsp; Margin =</span><div class="answer-line"></div><span>cm</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- PHASE 2 — same questions, re-answered -->
+    <div class="phase-section">
+      <div class="phase-pill pill-p2"><div class="pill-dot"></div>PHASE 2 — FIXED PROTOCOL · CONVERT TO METRES FIRST</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="question">
+          <div class="q-num">Q1 — Stack Length (Phase 2)</div>
+          <p>Same as Q1. Using converted values.</p>
+          <div class="answer-area"><span class="ans-label">Stack =</span><div class="answer-line"></div><span>m &nbsp;| Clearance =</span><div class="answer-line"></div><span>m</span></div>
+        </div>
+        <div class="question">
+          <div class="q-num">Q2 — Solar Panel Clearance (Phase 2)</div>
+          <p>Same as Q2. Using converted values.</p>
+          <div class="answer-area"><span class="ans-label">Span =</span><div class="answer-line"></div><span>m &nbsp;| Fits? Y / N</span></div>
+        </div>
+        <div class="question">
+          <div class="q-num">Q3 — Full External Length (Phase 2)</div>
+          <p>Same as Q3. Using converted values.</p>
+          <div class="answer-area"><span class="ans-label">Total =</span><div class="answer-line"></div><span>m</span></div>
+        </div>
+        <div class="question bonus-q">
+          <div class="bonus-badge">BONUS</div>
+          <div class="q-num">Q4 — Docking Clearance (Phase 2)</div>
+          <p>Same as Q4. Using converted values.</p>
+          <div class="answer-area"><span class="ans-label">C ≥ D? Y / N &nbsp; Margin =</span><div class="answer-line"></div><span>cm</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCORING
+══════════════════════════════════════ -->
+<div class="scoring-grid">
+  <div class="score-card sc-p1">
+    <div class="sc-head">Phase 1 — Tracking</div>
+    <div class="sc-body">
+      <div class="score-row"><span>Q1 attempted</span><span class="score-pts">—</span></div>
+      <div class="score-row"><span>Q2 attempted</span><span class="score-pts">—</span></div>
+      <div class="score-row"><span>Q3 attempted</span><span class="score-pts">—</span></div>
+      <div class="score-row"><span style="font-style:italic;color:#94a3b8">How many were correct?</span><span class="score-pts">/ 3</span></div>
+    </div>
+  </div>
+  <div class="score-card sc-p2">
+    <div class="sc-head">Phase 2 — Mission Score</div>
+    <div class="sc-body">
+      <div class="score-row"><span>Q1 correct</span><span class="score-pts">+1</span></div>
+      <div class="score-row"><span>Q2 correct</span><span class="score-pts">+1</span></div>
+      <div class="score-row"><span>Q3 correct</span><span class="score-pts">+1</span></div>
+      <div class="score-row"><span>Q4 bonus correct</span><span class="score-pts">+1</span></div>
+      <div class="score-row"><span><strong>First group with all correct</strong></span><span class="score-pts">🚀</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TEACHER ANSWER KEY
+══════════════════════════════════════ -->
+<div class="teacher-key">
+  <div class="key-header">
+    ⚿ &nbsp; TEACHER ANSWER KEY — DO NOT DISTRIBUTE
+  </div>
+  <div class="key-body">
+
+    <p style="font-size:12px;color:#92400e;margin-bottom:16px;font-family:'Space Mono',monospace">ALL MEASUREMENTS IN METRES (Phase 2 correct values)</p>
+
+    <div class="key-conversions">
+      <div class="conv-group">
+        <div class="cg-label">Engineering → metres</div>
+        <div class="conv-row"><span class="eng-val">A</span><span class="conv-arrow">→</span> 450 cm ÷ 100 = <span class="m-val">4.5 m</span></div>
+        <div class="conv-row"><span class="eng-val">B</span><span class="conv-arrow">→</span> 2500 mm ÷ 1000 = <span class="m-val">2.5 m</span></div>
+        <div class="conv-row"><span class="eng-val">C</span><span class="conv-arrow">→</span> 80 cm ÷ 100 = <span class="m-val">0.8 m</span> = 800 mm</div>
+        <div class="conv-row"><span class="eng-val">D</span><span class="conv-arrow">→</span> 750 mm ÷ 1000 = <span class="m-val">0.75 m</span> = 750 mm</div>
+      </div>
+      <div class="conv-group">
+        <div class="cg-label">Mission Control → metres</div>
+        <div class="conv-row"><span class="mc-val">W</span><span class="conv-arrow">→</span> <span class="m-val">6.5 m</span> (already in m)</div>
+        <div class="conv-row"><span class="mc-val">X</span><span class="conv-arrow">→</span> <span class="m-val">11.0 m</span> (already in m)</div>
+        <div class="conv-row"><span class="mc-val">Y</span><span class="conv-arrow">→</span> 1.2 km × 1000 = <span class="m-val">1200 m</span></div>
+        <div class="conv-row"><span class="mc-val">Z</span><span class="conv-arrow">→</span> 0.085 km × 1000 = <span class="m-val">85 m</span></div>
+      </div>
+    </div>
+
+    <div class="key-answers">
+      <div class="key-q">
+        <div class="kq-ref">Q1 — Stack Fit</div>
+        <div class="kq-row"><span style="color:#475569">Phase 2 correct:</span></div>
+        <div class="kq-row"><span class="working">W + A = 6.5 + 4.5 = 11.0 m</span></div>
+        <div class="kq-row"><span class="right">Stack = 11.0 m = X → FITS EXACTLY. Clearance = 0 m.</span></div>
+        <div style="height:8px"></div>
+        <div class="kq-row"><span style="color:#475569">Phase 1 likely wrong:</span></div>
+        <div class="kq-row"><span class="working">6.5 + 450 = 456.5 "m" → doesn't fit by 445.5</span></div>
+        <div class="kq-row"><span class="wrong">MISSION FAILURE ✗</span></div>
+      </div>
+
+      <div class="key-q">
+        <div class="kq-ref">Q2 — Solar Panel Clearance</div>
+        <div class="kq-row"><span style="color:#475569">Phase 2 correct:</span></div>
+        <div class="kq-row"><span class="working">2 × B = 2 × 2.5 = 5.0 m</span></div>
+        <div class="kq-row"><span class="working">Z = 85 m &nbsp;→&nbsp; 5.0 m &lt; 85 m</span></div>
+        <div class="kq-row"><span class="right">FITS. Clearance = 80 m ✓</span></div>
+        <div style="height:8px"></div>
+        <div class="kq-row"><span style="color:#475569">Phase 1 likely wrong:</span></div>
+        <div class="kq-row"><span class="working">2 × 2500 = 5000 "m" vs 85 m</span></div>
+        <div class="kq-row"><span class="wrong">Panels "5000 m" wide → FAILURE ✗</span></div>
+      </div>
+
+      <div class="key-q">
+        <div class="kq-ref">Q3 — Full External Length</div>
+        <div class="kq-row"><span style="color:#475569">Phase 2 correct:</span></div>
+        <div class="kq-row"><span class="working">W + A + 2B</span></div>
+        <div class="kq-row"><span class="working">= 6.5 + 4.5 + 2(2.5)</span></div>
+        <div class="kq-row"><span class="working">= 6.5 + 4.5 + 5.0</span></div>
+        <div class="kq-row"><span class="right">= 16.0 m ✓</span></div>
+        <div style="height:8px"></div>
+        <div class="kq-row"><span style="color:#475569">Phase 1 likely wrong:</span></div>
+        <div class="kq-row"><span class="working">6.5 + 450 + 5000 = 5456.5 "m"</span></div>
+        <div class="kq-row"><span class="wrong">MISSION FAILURE ✗</span></div>
+      </div>
+
+      <div class="key-q">
+        <div class="kq-ref">Q4 (Bonus) — Docking Clearance</div>
+        <div class="kq-row"><span style="color:#475569">Phase 2 correct:</span></div>
+        <div class="kq-row"><span class="working">C = 800 mm, D = 750 mm</span></div>
+        <div class="kq-row"><span class="working">C ≥ D? 800 ≥ 750 → YES</span></div>
+        <div class="kq-row"><span class="right">Margin = 800 − 750 = 50 mm = 5 cm ✓</span></div>
+        <div style="height:8px"></div>
+        <div class="kq-row"><span style="color:#475569">Phase 1 likely wrong:</span></div>
+        <div class="kq-row"><span class="working">C read as "80 mm", D = "750 mm"</span></div>
+        <div class="kq-row"><span class="wrong">80 &lt; 750 → FAILS ✗ (reversed result)</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid #fde68a">
+      <p style="font-size:11.5px;color:#92400e;font-family:'Space Mono',monospace;line-height:1.8">
+        DEBRIEF NOTES &nbsp;|&nbsp;
+        Q1 is the most dramatic: the stack fits <em>exactly</em> (0 m clearance) when units are correct — but is 456.5 m long without conversion. Use this to ask: "How did engineers not catch this for 10 months?"<br>
+        Q2 produces "5000 m solar panels" — use for humour. "Would those panels fit inside this building?"<br>
+        Q4 reverses the pass/fail result entirely — collar looks fine without units, looks dangerously narrow with them. Good for discussion of how errors can go in either direction.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Circle Theorems Interactive Demo</title>
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            background: #f8fafc; 
+            margin: 0; 
+            padding: 40px; 
+        }
+        h1 { color: #1e293b; margin-bottom: 8px; }
+        p.subtitle { color: #64748b; margin-top: 0; margin-bottom: 24px; }
+        
+        .toolbar { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+        }
+        
+        button { 
+            padding: 10px 18px; 
+            font-size: 15px; 
+            font-weight: 600;
+            cursor: pointer; 
+            border: 2px solid #e2e8f0; 
+            background: #fff; 
+            color: #475569;
+            border-radius: 8px; 
+            transition: all 0.2s;
+        }
+        button:hover { border-color: #cbd5e1; background: #f1f5f9; }
+        button.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+        button.active:hover { background: #2563eb; border-color: #2563eb; }
+        
+        button.warning.active { background: #ef4444; border-color: #ef4444; color: white; }
+        button.warning.active:hover { background: #dc2626; border-color: #dc2626; }
+
+        canvas { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); 
+            cursor: grab; 
+        }
+        canvas:active { cursor: grabbing; }
+        
+        .instructions { 
+            margin-top: 20px; 
+            color: #64748b; 
+            font-size: 15px; 
+            text-align: center; 
+            max-width: 700px; 
+            line-height: 1.6; 
+        }
+        .instructions kbd {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Circle Theorems</h1>
+    <p class="subtitle">Interactive demonstration designed for the Silent Teacher method</p>
+    
+    <div class="toolbar">
+        <button id="btn-part4" class="active">Part 4: Semicircle</button>
+        <button id="btn-part5">Part 5: Angle at Centre</button>
+        <div style="width: 20px;"></div>
+        <button id="btn-nonexample" class="warning">Mode: On Circle</button>
+        <button id="btn-showangles" class="active">Show Angles</button>
+    </div>
+    
+    <div class="toolbar" id="test-toolbar" style="display: none;">
+        <button id="btn-test-none" class="active">Show Both Angles</button>
+        <button id="btn-test-center">Hide Center Angle</button>
+        <button id="btn-test-edge">Hide Edge Angle</button>
+    </div>
+    
+    <div class="toolbar" id="snapshot-toolbar">
+        <button id="btn-snapshot" style="background: #10b981; border-color: #10b981; color: white;">📸 Snapshot Edge Angle</button>
+        <button id="btn-clearsnapshots">Clear Snapshots</button>
+    </div>
+    
+    <canvas id="canvas" width="800" height="600"></canvas>
+    
+    <p class="instructions">
+        <strong>Teacher Instructions:</strong><br>
+        Start with "Show Angles" active. Drag the blue point <kbd>X</kbd> around the circle in silence so students notice the invariant property.<br><br>
+        Click <kbd>Mode: On Circle</kbd> to detach point <kbd>X</kbd>. This lets you show a <strong>non-example</strong> where the rule breaks (the angle changes).<br><br>
+        In Part 5, use <kbd>📸 Snapshot Edge Angle</kbd> to copy the blue angle. Drag the snapshots to the center <kbd>O</kbd> to physically stack two edge angles inside the center angle!
+    </p>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let mode = 'part4'; // 'part4' or 'part5'
+        let constrainToCircle = true;
+        let showAngles = true;
+        let testMode = 'none'; // 'none', 'hide-center', 'hide-edge'
+        
+        let currentEdgeAngle = 0;
+        let currentCenterStartAngle = 0;
+        let currentCenterSweepDir = 1;
+        let snapshots = [];
+        let draggingSnapshot = null;
+        
+        const cx = 400, cy = 300, r = 200;
+        let points = [];
+        
+        const btnPart4 = document.getElementById('btn-part4');
+        const btnPart5 = document.getElementById('btn-part5');
+        const btnNonExample = document.getElementById('btn-nonexample');
+        const btnShowAngles = document.getElementById('btn-showangles');
+        
+        const testToolbar = document.getElementById('test-toolbar');
+        const btnTestNone = document.getElementById('btn-test-none');
+        const btnTestCenter = document.getElementById('btn-test-center');
+        const btnTestEdge = document.getElementById('btn-test-edge');
+        
+        const btnSnapshot = document.getElementById('btn-snapshot');
+        const btnClearSnapshots = document.getElementById('btn-clearsnapshots');
+        
+        function getPoint(angle) {
+            return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+        }
+        
+        function initMode() {
+            if (mode === 'part4') {
+                points = [
+                    { id: 'A', x: cx - r, y: cy, fixed: true, onCircle: true },
+                    { id: 'B', x: cx + r, y: cy, fixed: true, onCircle: true },
+                    { id: 'X', ...getPoint(-Math.PI / 3), fixed: false, onCircle: constrainToCircle }
+                ];
+            } else {
+                points = [
+                    { id: 'A', ...getPoint(Math.PI * 0.8), fixed: false, onCircle: true },
+                    { id: 'B', ...getPoint(Math.PI * 0.2), fixed: false, onCircle: true },
+                    { id: 'X', ...getPoint(-Math.PI / 2), fixed: false, onCircle: constrainToCircle }
+                ];
+            }
+            draw();
+        }
+        
+        btnPart4.addEventListener('click', () => {
+            mode = 'part4';
+            btnPart4.classList.add('active');
+            btnPart5.classList.remove('active');
+            testToolbar.style.display = 'none';
+            initMode();
+        });
+        
+        btnPart5.addEventListener('click', () => {
+            mode = 'part5';
+            btnPart5.classList.add('active');
+            btnPart4.classList.remove('active');
+            testToolbar.style.display = 'flex';
+            initMode();
+        });
+        
+        btnNonExample.addEventListener('click', () => {
+            constrainToCircle = !constrainToCircle;
+            if (constrainToCircle) {
+                btnNonExample.classList.remove('active');
+                btnNonExample.textContent = "Mode: On Circle";
+            } else {
+                btnNonExample.classList.add('active');
+                btnNonExample.textContent = "Mode: Free Drag (Non-example)";
+            }
+            
+            let pX = points.find(p => p.id === 'X');
+            if (pX) {
+                pX.onCircle = constrainToCircle;
+                if (constrainToCircle) {
+                    let ang = Math.atan2(pX.y - cy, pX.x - cx);
+                    pX.x = cx + r * Math.cos(ang);
+                    pX.y = cy + r * Math.sin(ang);
+                }
+            }
+            draw();
+        });
+        
+        btnShowAngles.addEventListener('click', () => {
+            showAngles = !showAngles;
+            if (showAngles) {
+                btnShowAngles.classList.add('active');
+                btnShowAngles.textContent = "Show Angles";
+            } else {
+                btnShowAngles.classList.remove('active');
+                btnShowAngles.textContent = "Hide All Angles";
+            }
+            draw();
+        });
+        
+        btnTestNone.addEventListener('click', () => {
+            testMode = 'none';
+            btnTestNone.classList.add('active');
+            btnTestCenter.classList.remove('active');
+            btnTestEdge.classList.remove('active');
+            draw();
+        });
+        
+        btnTestCenter.addEventListener('click', () => {
+            testMode = 'hide-center';
+            btnTestCenter.classList.add('active');
+            btnTestNone.classList.remove('active');
+            btnTestEdge.classList.remove('active');
+            draw();
+        });
+        
+        btnTestEdge.addEventListener('click', () => {
+            testMode = 'hide-edge';
+            btnTestEdge.classList.add('active');
+            btnTestNone.classList.remove('active');
+            btnTestCenter.classList.remove('active');
+            draw();
+        });
+        
+        btnSnapshot.addEventListener('click', () => {
+            snapshots.push({
+                id: Date.now(),
+                x: 60 + (snapshots.length % 5) * 80,
+                y: 60 + Math.floor(snapshots.length / 5) * 80,
+                angle: currentEdgeAngle,
+                isSnapped: false,
+                color: `hsla(${Math.floor(Math.random()*360)}, 70%, 50%, 0.7)`
+            });
+            draw();
+        });
+        
+        btnClearSnapshots.addEventListener('click', () => {
+            snapshots = [];
+            draw();
+        });
+        
+        btnSnapshot.addEventListener('click', () => {
+            if (currentEdgeAngle > 0) {
+                // Place new snapshot to the side (left side)
+                snapshots.push({
+                    id: Date.now(),
+                    x: 100,
+                    y: 100 + (snapshots.length * 80),
+                    angleSize: currentEdgeAngle,
+                    rotation: 0,
+                    isSnapped: false,
+                    color: 'rgba(37, 99, 235, 0.5)' // semi-transparent blue
+                });
+                draw();
+            }
+        });
+
+        btnClearSnapshots.addEventListener('click', () => {
+            snapshots = [];
+            draw();
+        });
+        
+        function drawLine(p1, p2, color) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function drawPoint(p) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = p.fixed ? '#94a3b8' : '#3b82f6';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText(p.id, p.x + 12, p.y + 12);
+        }
+        
+        function drawAngle(vertex, p1, p2, color) {
+            let a = Math.atan2(p1.y - vertex.y, p1.x - vertex.x);
+            let b = Math.atan2(p2.y - vertex.y, p2.x - vertex.x);
+            
+            if (a < 0) a += 2*Math.PI;
+            if (b < 0) b += 2*Math.PI;
+            
+            let diff = b - a;
+            if (diff < 0) diff += 2*Math.PI;
+            
+            let sweepClockwise = diff <= Math.PI;
+            let anticlockwise = !sweepClockwise;
+            let sweptAngle = sweepClockwise ? diff : (2*Math.PI - diff);
+            let midAngle = sweepClockwise ? (a + diff/2) : (a - (2*Math.PI - diff)/2);
+            
+            // Save current edge angle for snapshot
+            currentEdgeAngle = sweptAngle;
+            
+            ctx.beginPath();
+            ctx.arc(vertex.x, vertex.y, 30, a, b, anticlockwise);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            let degrees = sweptAngle * 180 / Math.PI;
+            let tx = vertex.x + 45 * Math.cos(midAngle);
+            let ty = vertex.y + 45 * Math.sin(midAngle);
+            
+            ctx.fillStyle = color;
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText(Math.round(degrees) + '°', tx - 15, ty + 5);
+            
+            // Save current edge angle for snapshotting
+            currentEdgeAngle = sweptAngle;
+        }
+        
+        function drawCenterAngle(vertex, p1, p2, pX, color) {
+            let a = Math.atan2(p1.y - vertex.y, p1.x - vertex.x);
+            let b = Math.atan2(p2.y - vertex.y, p2.x - vertex.x);
+            
+            if (a < 0) a += 2*Math.PI;
+            if (b < 0) b += 2*Math.PI;
+            
+            let diff = b - a;
+            if (diff < 0) diff += 2*Math.PI;
+            
+            let mid1 = a + diff/2;
+            let mid2 = a - (2*Math.PI - diff)/2;
+            
+            let mid1Pt = { x: vertex.x + Math.cos(mid1), y: vertex.y + Math.sin(mid1) };
+            let mid2Pt = { x: vertex.x + Math.cos(mid2), y: vertex.y + Math.sin(mid2) };
+            
+            let d1 = Math.hypot(mid1Pt.x - pX.x, mid1Pt.y - pX.y);
+            let d2 = Math.hypot(mid2Pt.x - pX.x, mid2Pt.y - pX.y);
+            
+            let sweepClockwise = (d1 > d2); 
+            let anticlockwise = !sweepClockwise;
+            let sweptAngle = sweepClockwise ? diff : (2*Math.PI - diff);
+            let midAngle = sweepClockwise ? mid1 : mid2;
+            
+            ctx.beginPath();
+            ctx.arc(vertex.x, vertex.y, 30, a, b, anticlockwise);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            let degrees = sweptAngle * 180 / Math.PI;
+            let tx = vertex.x + 45 * Math.cos(midAngle);
+            let ty = vertex.y + 45 * Math.sin(midAngle);
+            
+            ctx.fillStyle = color;
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText(Math.round(degrees) + '°', tx - 15, ty + 5);
+            
+            // Save center angle properties for snapping
+            currentCenterStartAngle = midAngle - sweptAngle/2;
+            currentCenterSweepDir = sweepClockwise ? 1 : -1;
+        }
+        
+        function drawSnapshots() {
+            for (let snap of snapshots) {
+                ctx.save();
+                ctx.translate(snap.x, snap.y);
+                ctx.rotate(snap.rotation);
+                
+                // Draw a wedge representing the angle
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, 60, 0, snap.angleSize, false);
+                ctx.lineTo(0, 0);
+                ctx.fillStyle = snap.color;
+                ctx.fill();
+                ctx.strokeStyle = '#1e3a8a'; // darker blue outline
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw center
+            ctx.beginPath();
+            ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = '#64748b';
+            ctx.fill();
+            ctx.fillStyle = '#64748b';
+            ctx.font = '14px sans-serif';
+            ctx.fillText('O', cx - 5, cy + 20);
+            
+            if (mode === 'part4') {
+                let A = points[0], B = points[1], X = points[2];
+                
+                drawLine(A, B, '#64748b');
+                drawLine(A, X, '#2563eb');
+                drawLine(B, X, '#2563eb');
+                
+                if (showAngles) {
+                    drawAngle(X, A, B, '#2563eb');
+                }
+                
+                points.forEach(p => drawPoint(p));
+            } else if (mode === 'part5') {
+                let A = points[0], B = points[1], X = points[2];
+                let O = { x: cx, y: cy };
+                
+                drawLine(A, O, '#ef4444');
+                drawLine(B, O, '#ef4444');
+                drawLine(A, X, '#2563eb');
+                drawLine(B, X, '#2563eb');
+                
+                if (showAngles) {
+                    if (testMode !== 'hide-edge') {
+                        drawAngle(X, A, B, '#2563eb');
+                    }
+                    if (testMode !== 'hide-center') {
+                        drawCenterAngle(O, A, B, X, '#ef4444');
+                    }
+                }
+                
+                drawSnapshots();
+                
+                points.forEach(p => drawPoint(p));
+            }
+        }
+        
+        let draggingPoint = null;
+        
+        canvas.addEventListener('mousedown', e => {
+            let rect = canvas.getBoundingClientRect();
+            let mx = e.clientX - rect.left;
+            let my = e.clientY - rect.top;
+            
+            // Check snapshots first (reverse order so top drawn is clicked first)
+            for (let i = snapshots.length - 1; i >= 0; i--) {
+                let snap = snapshots[i];
+                if (Math.hypot(snap.x - mx, snap.y - my) < 60) {
+                    draggingSnapshot = snap;
+                    snap.isSnapped = false; // detach if grabbed again
+                    return;
+                }
+            }
+            
+            for (let p of points) {
+                if (!p.fixed && Math.hypot(p.x - mx, p.y - my) < 20) {
+                    draggingPoint = p;
+                    break;
+                }
+            }
+        });
+        
+        canvas.addEventListener('mousemove', e => {
+            let rect = canvas.getBoundingClientRect();
+            let mx = e.clientX - rect.left;
+            let my = e.clientY - rect.top;
+            
+            if (draggingSnapshot) {
+                draggingSnapshot.x = mx;
+                draggingSnapshot.y = my;
+                
+                // Snapping logic if near center
+                if (mode === 'part5' && Math.hypot(mx - cx, my - cy) < 40) {
+                    draggingSnapshot.x = cx;
+                    draggingSnapshot.y = cy;
+                    draggingSnapshot.isSnapped = true;
+                    
+                    // Count how many are snapped before this one to stack them
+                    let snappedCount = snapshots.filter(s => s.isSnapped && s.id !== draggingSnapshot.id).length;
+                    
+                    let baseAngle = currentCenterStartAngle;
+                    if (currentCenterSweepDir < 0) {
+                        baseAngle -= draggingSnapshot.angleSize; // flip direction if needed
+                    }
+                    
+                    // Stack them: add the angle of already snapped wedges
+                    draggingSnapshot.rotation = baseAngle + (snappedCount * draggingSnapshot.angleSize * currentCenterSweepDir);
+                } else {
+                    draggingSnapshot.isSnapped = false;
+                    draggingSnapshot.rotation = 0;
+                }
+                
+                draw();
+                return;
+            }
+            
+            if (!draggingPoint) return;
+            
+            if (draggingPoint.onCircle) {
+                let ang = Math.atan2(my - cy, mx - cx);
+                draggingPoint.x = cx + r * Math.cos(ang);
+                draggingPoint.y = cy + r * Math.sin(ang);
+            } else {
+                draggingPoint.x = mx;
+                draggingPoint.y = my;
+            }
+            draw();
+        });
+        
+        canvas.addEventListener('mouseup', () => { draggingPoint = null; draggingSnapshot = null; });
+        canvas.addEventListener('mouseleave', () => { draggingPoint = null; draggingSnapshot = null; });
+        
+        initMode();
+    </script>
+</body>
+</html>

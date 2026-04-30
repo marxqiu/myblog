@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Rope Puzzle</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #f0f4f8;
+    color: #1e293b;
+    font-family: 'Georgia', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 20px 50px;
+    gap: 18px;
+  }
+
+  h1 { font-size: 1.3rem; color: #1e293b; letter-spacing: 0.03em; text-align: center; }
+  .subtitle { font-size: 0.82rem; color: #64748b; text-align: center; margin-top: 3px; }
+
+  /* ── Cards ── */
+  .card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: 16px 18px 12px;
+    max-width: 660px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  canvas { display: block; }
+
+  /* ── Rolling canvas ── */
+  #c-roll {
+    border-radius: 8px;
+    background: #fafbff;
+    border: 1px solid #e2e8f0;
+  }
+
+  /* ── Replay ── */
+  .replay-btn {
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    color: #2563eb;
+    border-radius: 8px;
+    padding: 6px 18px;
+    font-size: 0.83rem;
+    cursor: pointer;
+    font-family: 'Georgia', serif;
+    transition: background 0.12s;
+    align-self: flex-end;
+  }
+  .replay-btn:hover { background: #dbeafe; }
+
+  /* ── Two circles row ── */
+  .circles-row {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel canvas {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .panel-label { text-align: center; font-size: 0.85rem; color: #64748b; line-height: 1.5; }
+  .panel-label strong { color: #1e293b; display: block; font-size: 0.96rem; }
+
+  /* gap badge */
+  .gap-badge {
+    background: #f8faff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 7px 18px;
+    text-align: center;
+    min-width: 136px;
+    transition: background 0.4s, border-color 0.4s;
+  }
+  .gap-badge .lbl  { font-size: 0.74rem; color: #94a3b8; }
+  .gap-badge .val  { font-size: 1.5rem; font-family: 'Courier New', monospace; color: #94a3b8; font-weight: bold; line-height: 1.2; }
+  .gap-badge .unit { font-size: 0.74rem; color: #94a3b8; }
+  .gap-badge.revealed { background: #f0fdf4; border-color: #86efac; }
+  .gap-badge.revealed .lbl,
+  .gap-badge.revealed .unit { color: #64748b; }
+  .gap-badge.revealed .val  { color: #15803d; }
+
+  /* same banner */
+  .same-banner {
+    background: #f0fdf4;
+    border: 1.5px solid #4ade80;
+    border-radius: 10px;
+    padding: 8px 24px;
+    font-size: 0.88rem;
+    color: #15803d;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.5s;
+    max-width: 640px;
+    width: 100%;
+  }
+  .same-banner.show { opacity: 1; }
+
+  /* guess buttons */
+  .guess-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .guess-btn {
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    color: #334155;
+    border-radius: 9px;
+    padding: 9px 20px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    font-family: 'Georgia', serif;
+    transition: background 0.12s, border-color 0.12s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .guess-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #94a3b8; }
+  .guess-btn.correct { background: #dcfce7; border-color: #4ade80; color: #15803d; }
+  .guess-btn.wrong   { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+  .guess-btn:disabled { cursor: default; }
+
+  /* slider card */
+  .slider-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 24px;
+    max-width: 640px;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .ctrl-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .ctrl-header span { font-size: 0.84rem; color: #64748b; }
+  .dc-val { font-size: 1.9rem; font-family: 'Courier New', monospace; color: #d97706; font-weight: bold; }
+  input[type=range] { width: 100%; accent-color: #d97706; cursor: pointer; }
+  .tick-row { display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.72rem; color: #94a3b8; padding: 0 2px; }
+  .tick-row span { cursor: pointer; transition: color 0.12s; }
+  .tick-row span:hover { color: #d97706; }
+  .analogy { text-align: center; font-size: 0.78rem; color: #94a3b8; min-height: 1.3em; margin-top: 8px; }
+  .analogy.special { color: #d97706; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div>
+  <h1>The Rope Puzzle</h1>
+  <p class="subtitle">Watch the animation — then make your guess</p>
+</div>
+
+<!-- Rolling canvas card -->
+<div class="card">
+  <canvas id="c-roll" width="608" height="178"></canvas>
+  <button class="replay-btn" onclick="startRollAnim()">↺ &ensp;Replay</button>
+</div>
+
+<!-- Two circle panels -->
+<div class="circles-row">
+  <div class="panel">
+    <canvas id="c-table" width="290" height="290"></canvas>
+    <div class="panel-label"><strong>Table</strong>r ≈ 0.5 m</div>
+    <div class="gap-badge" id="badge-table">
+      <div class="lbl">gap &thinsp;Δr =</div>
+      <div class="val" id="dr-table">?</div>
+      <div class="unit">cm</div>
+    </div>
+  </div>
+  <div class="panel">
+    <canvas id="c-earth" width="290" height="290"></canvas>
+    <div class="panel-label"><strong>Earth</strong>r ≈ 6 400 km</div>
+    <div class="gap-badge" id="badge-earth">
+      <div class="lbl">gap &thinsp;Δr =</div>
+      <div class="val" id="dr-earth">?</div>
+      <div class="unit">cm</div>
+    </div>
+  </div>
+</div>
+
+<div class="same-banner" id="same-banner">
+  ✓ &ensp; Same gap for both — the radius cancels out of the formula
+</div>
+
+<!-- Guess buttons -->
+<div class="guess-row">
+  <button class="guess-btn" id="btn-table" onclick="guess('table')">🪑 &ensp;Table gap is bigger</button>
+  <button class="guess-btn" id="btn-same"  onclick="guess('same')">⚖️ &ensp;Same gap</button>
+  <button class="guess-btn" id="btn-earth" onclick="guess('earth')">🌍 &ensp;Earth gap is bigger</button>
+</div>
+
+<!-- Slider -->
+<div class="slider-card">
+  <div class="ctrl-header">
+    <span>Extra rope added &ensp; Δ<em>C</em></span>
+    <span class="dc-val"><span id="dc-display">1.00</span> m</span>
+  </div>
+  <input type="range" id="dc-slider" min="0" max="6.28" value="1" step="0.01">
+  <div class="tick-row">
+    <span onclick="jumpTo(0)">0</span>
+    <span onclick="jumpTo(1)">1 m</span>
+    <span onclick="jumpTo(2)">2 m</span>
+    <span onclick="jumpTo(3)">3 m</span>
+    <span onclick="jumpTo(3.14159)">π m</span>
+    <span onclick="jumpTo(4)">4 m</span>
+    <span onclick="jumpTo(5)">5 m</span>
+    <span onclick="jumpTo(6.28318)">2π m</span>
+  </div>
+  <div class="analogy" id="analogy"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// ROLLING CANVAS
+// ══════════════════════════════════════════════════════
+
+const ROLL_W = 608, ROLL_H = 178;
+const R_ROLL = 40;                              // rolling circle radius px
+const TRACK_Y = 148;                            // floor y
+const CY_ROLL = TRACK_Y - R_ROLL;              // circle centre y = 108
+const X0 = 56;                                  // starting centre x
+const C_PX = 2 * Math.PI * R_ROLL;             // ≈ 251.3 px
+const X_ENDC = X0 + C_PX;                      // ≈ 307.3 px
+const DC_SCALE = 36;                            // px per metre of ΔC
+
+const rollCanvas = document.getElementById('c-roll');
+const rollCtx    = rollCanvas.getContext('2d');
+
+let rollRafId  = null;
+let rollStart  = null;
+const ROLL_DUR = 3600; // ms, total animation
+
+// Phase boundaries (fraction of ROLL_DUR)
+const RP1 = 0.50;  // end of rolling phase
+const RP2 = 0.72;  // end of C-label phase
+const RP3 = 0.90;  // end of ΔC phase
+
+function drawRollFrame(animT) {
+  const ctx = rollCtx;
+  const dcPx = deltaC * DC_SCALE;
+
+  ctx.clearRect(0, 0, ROLL_W, ROLL_H);
+
+  // Background
+  ctx.fillStyle = '#fafbff';
+  ctx.fillRect(0, 0, ROLL_W, ROLL_H);
+
+  // Track line
+  ctx.beginPath();
+  ctx.moveTo(X0 - 22, TRACK_Y);
+  ctx.lineTo(X_ENDC + dcPx + 22, TRACK_Y);
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // ── Phase 1: rolling ──────────────────────────────
+  if (animT <= RP1) {
+    const theta = (animT / RP1) * 2 * Math.PI;
+    const cx    = X0 + R_ROLL * theta;
+
+    // Cycloid trace (built up)
+    if (theta > 0.05) {
+      ctx.beginPath();
+      for (let t = 0; t <= theta; t += 0.05) {
+        const mx = X0 + R_ROLL * (t + Math.sin(t));
+        const my = CY_ROLL + R_ROLL * Math.cos(t);
+        t === 0 ? ctx.moveTo(mx, my) : ctx.lineTo(mx, my);
+      }
+      ctx.strokeStyle = 'rgba(220,38,38,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Rolling circle
+    ctx.beginPath();
+    ctx.arc(cx, CY_ROLL, R_ROLL, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(37,99,235,0.07)';
+    ctx.fill();
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Radius spoke to mark
+    const markX = cx + R_ROLL * Math.sin(theta);
+    const markY = CY_ROLL + R_ROLL * Math.cos(theta);
+    ctx.beginPath();
+    ctx.moveTo(cx, CY_ROLL);
+    ctx.lineTo(markX, markY);
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Mark dot
+    ctx.beginPath();
+    ctx.arc(markX, markY, 4.5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#dc2626';
+    ctx.fill();
+
+    // Starting dot on floor
+    dot(ctx, X0, TRACK_Y, '#2563eb', 5);
+
+  } else {
+    // After rolling: faded full cycloid
+    ctx.beginPath();
+    for (let t = 0; t <= 2 * Math.PI; t += 0.05) {
+      const mx = X0 + R_ROLL * (t + Math.sin(t));
+      const my = CY_ROLL + R_ROLL * Math.cos(t);
+      t === 0 ? ctx.moveTo(mx, my) : ctx.lineTo(mx, my);
+    }
+    ctx.strokeStyle = 'rgba(220,38,38,0.18)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Settled circle at x_endC (faded, just outline)
+    ctx.beginPath();
+    ctx.arc(X_ENDC, CY_ROLL, R_ROLL, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(37,99,235,0.35)';
+    ctx.lineWidth = 1.8;
+    ctx.fillStyle = 'rgba(37,99,235,0.04)';
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // ── Phase 2: C bracket ────────────────────────────
+  if (animT >= RP1) {
+    const t2  = Math.min(1, (animT - RP1) / (RP2 - RP1));
+    const bLen = C_PX * t2;
+
+    // Bracket line below track
+    ctx.beginPath();
+    ctx.moveTo(X0, TRACK_Y + 15);
+    ctx.lineTo(X0 + bLen, TRACK_Y + 15);
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Tick marks
+    vTick(ctx, X0, TRACK_Y + 10, TRACK_Y + 20, '#2563eb');
+    if (t2 > 0.85) vTick(ctx, X_ENDC, TRACK_Y + 10, TRACK_Y + 20, '#2563eb');
+
+    // Floor dots
+    dot(ctx, X0, TRACK_Y, '#2563eb', 5);
+    if (t2 > 0.85) dot(ctx, X_ENDC, TRACK_Y, '#2563eb', 5);
+
+    // Label
+    if (t2 > 0.55) {
+      ctx.globalAlpha = (t2 - 0.55) / 0.45;
+      ctx.fillStyle   = '#1d4ed8';
+      ctx.font        = 'italic 13px Georgia';
+      ctx.textAlign   = 'center';
+      ctx.fillText('C  =  2π r', (X0 + X_ENDC) / 2, TRACK_Y + 30);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // ── Phase 3: ΔC segment ───────────────────────────
+  if (animT >= RP2) {
+    const t3   = Math.min(1, (animT - RP2) / (RP3 - RP2));
+    const segL = dcPx * t3;
+
+    // Blue bracket remains
+    ctx.beginPath();
+    ctx.moveTo(X0, TRACK_Y + 15);
+    ctx.lineTo(X_ENDC, TRACK_Y + 15);
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    vTick(ctx, X0,    TRACK_Y + 10, TRACK_Y + 20, '#2563eb');
+    vTick(ctx, X_ENDC, TRACK_Y + 10, TRACK_Y + 20, '#2563eb');
+    dot(ctx, X0,    TRACK_Y, '#2563eb', 5);
+    dot(ctx, X_ENDC, TRACK_Y, '#2563eb', 5);
+    ctx.fillStyle = '#1d4ed8';
+    ctx.font = 'italic 13px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('C  =  2π r', (X0 + X_ENDC) / 2, TRACK_Y + 30);
+
+    if (segL > 1) {
+      // Orange ΔC segment (on the floor level)
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur  = 8;
+      ctx.beginPath();
+      ctx.moveTo(X_ENDC, TRACK_Y + 15);
+      ctx.lineTo(X_ENDC + segL, TRACK_Y + 15);
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth   = 3;
+      ctx.lineCap     = 'round';
+      ctx.stroke();
+      ctx.restore();
+
+      vTick(ctx, X_ENDC + segL * t3, TRACK_Y + 10, TRACK_Y + 20, '#d97706');
+      dot(ctx, X_ENDC, TRACK_Y, '#2563eb', 5);
+
+      if (segL > 18) {
+        ctx.fillStyle = '#92400e';
+        ctx.font      = 'italic 12px Georgia';
+        ctx.textAlign = 'center';
+        ctx.fillText('ΔC', X_ENDC + segL / 2, TRACK_Y + 30);
+      }
+
+      if (t3 > 0.85) {
+        dot(ctx, X_ENDC + dcPx, TRACK_Y, '#d97706', 5);
+      }
+    }
+  }
+}
+
+function dot(ctx, x, y, color, r) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, 2 * Math.PI);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function vTick(ctx, x, y1, y2, color) {
+  ctx.beginPath();
+  ctx.moveTo(x, y1);
+  ctx.lineTo(x, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function startRollAnim() {
+  if (rollRafId) cancelAnimationFrame(rollRafId);
+  rollStart = null;
+
+  function loop(ts) {
+    if (!rollStart) rollStart = ts;
+    const t = Math.min(1, (ts - rollStart) / ROLL_DUR);
+    drawRollFrame(t);
+    if (t < 1) rollRafId = requestAnimationFrame(loop);
+  }
+  rollRafId = requestAnimationFrame(loop);
+}
+
+// ══════════════════════════════════════════════════════
+// TWO CIRCLE PANELS (static — show gap comparison)
+// ══════════════════════════════════════════════════════
+
+const CPW = 290, CPH = 290;
+const CPX = CPW / 2, CPY = CPH / 2;
+
+const R_TABLE = 78;
+const R_EARTH = 104;
+const PX_PER_CM = 0.36; // gap scale
+
+const ctxT = document.getElementById('c-table').getContext('2d');
+const ctxE = document.getElementById('c-earth').getContext('2d');
+
+function drawPanel(ctx, R, gapPx) {
+  ctx.clearRect(0, 0, CPW, CPH);
+  ctx.fillStyle = '#ffffff';
+  ctx.roundRect(0, 0, CPW, CPH, 14);
+  ctx.fill();
+
+  // Gap shading (annulus)
+  if (gapPx > 1) {
+    ctx.beginPath();
+    ctx.arc(CPX, CPY, R + gapPx, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(21,128,61,0.10)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(CPX, CPY, R, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+  }
+
+  // Object disk
+  ctx.beginPath();
+  ctx.arc(CPX, CPY, R - 2, 0, 2 * Math.PI);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fill();
+
+  // Original rope — dashed blue
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(CPX, CPY, R, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#93c5fd';
+  ctx.lineWidth = 1.8;
+  ctx.setLineDash([6, 4]);
+  ctx.stroke();
+  ctx.restore();
+
+  // New rope — solid orange
+  ctx.beginPath();
+  ctx.arc(CPX, CPY, R + gapPx, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#d97706';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Δr arrow (top-right, 45°)
+  if (gapPx > 5) {
+    const ang = -Math.PI / 4;
+    const x1 = CPX + R * Math.cos(ang);
+    const y1 = CPY + R * Math.sin(ang);
+    const x2 = CPX + (R + gapPx) * Math.cos(ang);
+    const y2 = CPY + (R + gapPx) * Math.sin(ang);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = '#15803d';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // Arrowhead
+    const hw = 4.5;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - hw * Math.cos(ang - 0.45), y2 - hw * Math.sin(ang - 0.45));
+    ctx.lineTo(x2 - hw * Math.cos(ang + 0.45), y2 - hw * Math.sin(ang + 0.45));
+    ctx.closePath();
+    ctx.fillStyle = '#15803d';
+    ctx.fill();
+
+    ctx.fillStyle = '#15803d';
+    ctx.font = 'bold 11px Courier New';
+    ctx.textAlign = 'left';
+    ctx.fillText('Δr', x2 + 5, y2 + 4);
+    ctx.restore();
+  }
+}
+
+function drawPanels() {
+  const dr_cm = (deltaC / (2 * Math.PI)) * 100;
+  const gapPx = dr_cm * PX_PER_CM;
+  drawPanel(ctxT, R_TABLE, gapPx);
+  drawPanel(ctxE, R_EARTH, gapPx);
+}
+
+// ══════════════════════════════════════════════════════
+// STATE & CONTROLS
+// ══════════════════════════════════════════════════════
+
+let deltaC = 1.0;
+let guessed = false;
+
+function updateAll() {
+  drawPanels();
+  const dr_cm = (deltaC / (2 * Math.PI)) * 100;
+  const drStr = dr_cm.toFixed(1);
+
+  document.getElementById('dc-display').textContent = deltaC.toFixed(2);
+
+  // Badges: hidden until guess
+  if (guessed) {
+    document.getElementById('dr-table').textContent = drStr;
+    document.getElementById('dr-earth').textContent = drStr;
+    document.getElementById('badge-table').classList.add('revealed');
+    document.getElementById('badge-earth').classList.add('revealed');
+    document.getElementById('same-banner').classList.toggle('show', deltaC > 0.02);
+  }
+
+  // Analogy
+  const aEl = document.getElementById('analogy');
+  let text = '', special = false;
+  if (deltaC < 0.05) {
+    text = '';
+  } else if (deltaC >= 3.08 && deltaC <= 3.20) {
+    text = 'ΔC = π m  ⟹  Δr = π/(2π) = exactly 0.5 m  ✦'; special = true;
+  } else if (deltaC >= 6.18 && deltaC <= 6.38) {
+    text = 'ΔC = 2π m  ⟹  Δr = 2π/(2π) = exactly 1 m  ✦'; special = true;
+  } else if (dr_cm < 6) {
+    text = `Gap ≈ ${drStr} cm — about the thickness of a finger`;
+  } else if (dr_cm < 22) {
+    text = `Gap ≈ ${drStr} cm — about the width of a hand`;
+  } else if (dr_cm < 40) {
+    text = `Gap ≈ ${drStr} cm — about the length of a ruler`;
+  } else if (dr_cm < 75) {
+    text = `Gap ≈ ${drStr} cm — about the height of a water bottle`;
+  } else {
+    text = `Gap ≈ ${drStr} cm — nearly a metre`;
+  }
+  aEl.textContent = text;
+  aEl.classList.toggle('special', special);
+}
+
+document.getElementById('dc-slider').addEventListener('input', function () {
+  deltaC = parseFloat(this.value);
+  startRollAnim();
+  updateAll();
+});
+
+function jumpTo(val) {
+  deltaC = val;
+  document.getElementById('dc-slider').value = val;
+  startRollAnim();
+  updateAll();
+}
+
+function guess(choice) {
+  if (guessed) return;
+  guessed = true;
+  ['table', 'same', 'earth'].forEach(id => {
+    const btn = document.getElementById('btn-' + id);
+    btn.disabled = true;
+    if (id === 'same') btn.classList.add('correct');
+    else if (id === choice) btn.classList.add('wrong');
+  });
+  updateAll();
+}
+
+// ── Init ────────────────────────────────────────────────
+drawPanels();
+startRollAnim();
+</script>
+</body>
+</html>

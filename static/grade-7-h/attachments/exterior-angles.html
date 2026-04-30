@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exterior Angles</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Georgia', 'Times New Roman', serif;
+  }
+  .container {
+    padding: 20px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <canvas id="diagram" width="400" height="300"></canvas>
+</div>
+
+<script>
+const DPR = window.devicePixelRatio || 1;
+
+function setupCanvas(id) {
+  const c = document.getElementById(id);
+  const w = c.width, h = c.height;
+  c.width = w * DPR;
+  c.height = h * DPR;
+  c.style.width = w + 'px';
+  c.style.height = h + 'px';
+  const ctx = c.getContext('2d');
+  ctx.scale(DPR, DPR);
+  return { ctx, w, h };
+}
+
+function drawAngleArc(ctx, vertex, p1, p2, radius, color, labelText, labelDist) {
+  const dx1 = p1[0] - vertex[0], dy1 = p1[1] - vertex[1];
+  const dx2 = p2[0] - vertex[0], dy2 = p2[1] - vertex[1];
+  const a1 = Math.atan2(dy1, dx1);
+  const a2 = Math.atan2(dy2, dx2);
+
+  let start = a1, end = a2;
+  let diff = end - start;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  const ccw = diff < 0;
+
+  ctx.beginPath();
+  ctx.arc(vertex[0], vertex[1], radius, start, end, ccw);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  if (labelText) {
+    let midAngle = start + diff / 2;
+    const lx = vertex[0] + labelDist * Math.cos(midAngle);
+    const ly = vertex[1] + labelDist * Math.sin(midAngle);
+    ctx.fillStyle = color;
+    ctx.font = 'italic 18px Georgia';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(labelText, lx, ly);
+  }
+}
+
+const { ctx } = setupCanvas('diagram');
+
+const A = [150, 60];
+const B = [50, 220];
+const C = [220, 220];
+const D = [340, 220];
+
+// Draw triangle fill
+ctx.beginPath();
+ctx.moveTo(A[0], A[1]);
+ctx.lineTo(B[0], B[1]);
+ctx.lineTo(C[0], C[1]);
+ctx.closePath();
+ctx.fillStyle = '#fef3e0';
+ctx.fill();
+
+// Draw angles
+drawAngleArc(ctx, A, B, C, 30, '#1565c0', 'a°', 48);
+drawAngleArc(ctx, B, C, A, 35, '#1565c0', 'b°', 55);
+drawAngleArc(ctx, C, A, B, 30, '#1565c0', 'c°', 48);
+drawAngleArc(ctx, C, D, A, 35, '#c62828', 'x°', 55);
+
+// Draw lines
+ctx.beginPath();
+ctx.moveTo(A[0], A[1]);
+ctx.lineTo(B[0], B[1]);
+ctx.lineTo(D[0], D[1]);
+ctx.moveTo(C[0], C[1]);
+ctx.lineTo(A[0], A[1]);
+ctx.strokeStyle = '#222';
+ctx.lineWidth = 2.5;
+ctx.lineJoin = 'round';
+ctx.stroke();
+
+// Draw points
+function drawPoint(p) {
+    ctx.beginPath();
+    ctx.arc(p[0], p[1], 4, 0, 2 * Math.PI);
+    ctx.fillStyle = '#222';
+    ctx.fill();
+}
+drawPoint(A);
+drawPoint(B);
+drawPoint(C);
+drawPoint(D);
+
+// Draw labels
+ctx.fillStyle = '#222';
+ctx.font = 'italic 20px Georgia';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+
+ctx.fillText('A', A[0], A[1] - 20);
+ctx.fillText('B', B[0] - 15, B[1] + 15);
+ctx.fillText('C', C[0] - 5, C[1] + 20);
+ctx.fillText('D', D[0] + 15, D[1] + 15);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Coastline Paradox — Perimeter Investigation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:    #0f172a;
+    --teal:   #0d7377;
+    --teal2:  #14a085;
+    --cream:  #fafaf7;
+    --warm:   #f5f0e8;
+    --border: #d1d5db;
+    --muted:  #6b7280;
+    --alert:  #7c3aed;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    padding: 32px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  .page-header {
+    border-top: 5px solid var(--teal);
+    padding: 28px 0 24px;
+    margin-bottom: 32px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 20px;
+  }
+  .header-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header-title {
+    font-family: 'Lora', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .header-title em {
+    font-style: italic;
+    color: var(--teal);
+  }
+  .header-subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .header-meta {
+    text-align: right;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .header-meta strong { color: var(--ink); }
+
+  /* ── CALLOUT BOX ── */
+  .callout {
+    border-left: 3px solid var(--teal);
+    background: white;
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 28px;
+    font-size: 13.5px;
+    line-height: 1.7;
+  }
+  .callout .callout-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .callout.paradox { border-color: var(--alert); }
+  .callout.paradox .callout-label { color: var(--alert); }
+
+  /* ── SECTION HEADINGS ── */
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-num {
+    background: var(--teal);
+    color: white;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: 'Lora', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ── SNOWFLAKE GALLERY ── */
+  .snowflake-gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .snowflake-cell {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .snowflake-cell canvas {
+    display: block;
+    margin: 0 auto 8px;
+  }
+  .iter-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .iter-sub {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .gallery-note {
+    font-size: 11.5px;
+    color: var(--muted);
+    text-align: center;
+    font-style: italic;
+    margin-bottom: 24px;
+  }
+
+  /* ── TABLE ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .data-table th {
+    background: var(--teal);
+    color: white;
+    padding: 9px 14px;
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .data-table th.center { text-align: center; }
+  .data-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:nth-child(even) td { background: #f8faf9; }
+  .data-table td.center { text-align: center; }
+  .data-table td.mono {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal);
+    text-align: center;
+  }
+  .data-table td.fill {
+    background: #f0fdf4;
+    text-align: center;
+  }
+  .fill-line {
+    display: inline-block;
+    border-bottom: 1.5px solid #9ca3af;
+    width: 80px;
+    height: 18px;
+    vertical-align: bottom;
+  }
+  .data-table td.formula-row {
+    background: #eff6ff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--alert);
+    text-align: center;
+  }
+  .data-table tr.formula-row td {
+    background: #eff6ff;
+  }
+
+  /* ── QUESTIONS ── */
+  .questions-block {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .questions-header {
+    background: var(--warm);
+    padding: 10px 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1.5px solid var(--border);
+  }
+  .questions-body { padding: 16px 20px; }
+  .q-item { margin-bottom: 20px; }
+  .q-item:last-child { margin-bottom: 0; }
+  .q-stem {
+    font-size: 13.5px;
+    line-height: 1.7;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .q-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--teal);
+    margin-right: 6px;
+  }
+  .ans-lines { display: flex; flex-direction: column; gap: 8px; padding-left: 20px; }
+  .ans-line-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .ans-line-row .line { flex: 1; border-bottom: 1px solid #d1d5db; height: 20px; }
+  .hint {
+    display: inline-block;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    border: 1px solid #fcd34d;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-left: 6px;
+  }
+  .key-insight {
+    background: #f0fdf4;
+    border: 1.5px solid #86efac;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.7;
+    margin-top: 10px;
+    color: #14532d;
+  }
+  .key-insight strong { font-weight: 600; }
+
+  /* ── THE SQUARE CONTRAST ── */
+  .contrast-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .contrast-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .contrast-card .cc-head {
+    padding: 10px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: white;
+  }
+  .snowflake-cc .cc-head { background: var(--alert); }
+  .square-cc .cc-head { background: var(--teal); }
+  .contrast-card .cc-body { padding: 14px 16px; font-size: 13px; line-height: 1.7; }
+  .perimeter-row {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border-radius: 4px;
+  }
+  .snowflake-cc .perimeter-row { background: #faf5ff; color: var(--alert); }
+  .square-cc .perimeter-row { background: #f0fdf4; color: var(--teal); }
+
+  /* ── FRACTAL SIDEBAR ── */
+  .fractal-fact {
+    background: #1e1b4b;
+    color: white;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    font-size: 12.5px;
+    line-height: 1.8;
+  }
+  .fractal-fact .ff-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    color: #a5b4fc;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .fractal-fact .dim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .fractal-fact .dim-item {
+    background: rgba(255,255,255,0.07);
+    border-radius: 4px;
+    padding: 7px 10px;
+  }
+  .fractal-fact .dim-label { font-size: 11px; color: #a5b4fc; }
+  .fractal-fact .dim-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: white;
+    font-weight: 600;
+  }
+
+  /* ── TEACHER KEY ── */
+  .teacher-section {
+    background: white;
+    border: 2px solid #fbbf24;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 32px;
+  }
+  .teacher-section .ts-head {
+    background: #f59e0b;
+    padding: 10px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #1a202c;
+  }
+  .teacher-section .ts-body { padding: 18px 20px; }
+  .ans-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 16px; }
+  .ans-table th {
+    background: #fef3c7;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 7px 12px;
+    text-align: center;
+    border-bottom: 2px solid #fcd34d;
+    color: #92400e;
+  }
+  .ans-table td {
+    padding: 9px 12px;
+    text-align: center;
+    border-bottom: 1px solid #fef3c7;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .ans-table tr:last-child td { border-bottom: none; }
+  .ans-table .growth { color: #dc2626; font-weight: 700; }
+  .debrief-notes { font-size: 12.5px; line-height: 1.8; }
+  .debrief-notes p { margin-bottom: 8px; }
+  .debrief-notes strong { color: var(--teal); }
+
+  /* ── RULE ── */
+  hr { border: none; border-top: 1.5px dashed var(--border); margin: 28px 0; }
+
+  @media print {
+    body { background: white; padding: 20px; }
+    .teacher-section { break-before: page; }
+    .snowflake-gallery { break-inside: avoid; }
+    .questions-block { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     PAGE HEADER
+══════════════════════════════════════ -->
+<div class="page-header">
+  <div>
+    <div class="header-eyebrow">Chapter 11 · Lesson 2 Inquiry · Perimeter</div>
+    <h1 class="header-title">The <em>Coastline Paradox</em></h1>
+    <div class="header-subtitle">你永远测不出它的长度 — you can never measure its length</div>
+  </div>
+  <div class="header-meta">
+    <strong>Group:</strong> ___________________<br>
+    <strong>Names:</strong> ___________________<br>
+    ___________________
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     OPENING QUESTION
+══════════════════════════════════════ -->
+<div class="callout paradox">
+  <div class="callout-label">Opening Question</div>
+  <strong>Does every shape have a perimeter you can measure?</strong><br>
+  Consider the coastline of an island. Measured with a 1 km ruler: 5.42 km.
+  Measured with a 500 m ruler: 6.93 km. Measured with a 200 m ruler: 8.62 km.
+  Measured with a tiny triangle ruler over three days: <strong>120.87 km</strong>.
+  The smaller the ruler, the longer the coastline — and it never stops growing.<br><br>
+  This is the <strong>Coastline Paradox</strong>. Before you learn about perimeter today,
+  you are going to investigate a shape that has the same problem.
+</div>
+
+<!-- ══════════════════════════════════════
+     PART 1 — SNOWFLAKE GALLERY
+══════════════════════════════════════ -->
+<div class="section-head">
+  <div class="section-num">1</div>
+  <div class="section-title">The Koch Snowflake — Growing Forever</div>
+</div>
+
+<div class="callout">
+  <div class="callout-label">Background</div>
+  The <strong>Koch snowflake</strong> is built from an equilateral triangle by a simple rule:
+  take each side, remove the middle third, and replace it with two sides of a smaller equilateral triangle.
+  Repeat on every side, forever. The four stages below start with a triangle of side length <strong>9 cm</strong>.
+</div>
+
+<div class="snowflake-gallery">
+  <div class="snowflake-cell">
+    <canvas id="c0" width="148" height="140"></canvas>
+    <div class="iter-label">Iteration 0</div>
+    <div class="iter-sub">Equilateral triangle</div>
+  </div>
+  <div class="snowflake-cell">
+    <canvas id="c1" width="148" height="140"></canvas>
+    <div class="iter-label">Iteration 1</div>
+    <div class="iter-sub">Each side → 4 mini-sides</div>
+  </div>
+  <div class="snowflake-cell">
+    <canvas id="c2" width="148" height="140"></canvas>
+    <div class="iter-label">Iteration 2</div>
+    <div class="iter-sub">Applied again</div>
+  </div>
+  <div class="snowflake-cell">
+    <canvas id="c3" width="148" height="140"></canvas>
+    <div class="iter-label">Iteration 3</div>
+    <div class="iter-sub">And again…</div>
+  </div>
+</div>
+<div class="gallery-note">
+  The area enclosed barely changes — but look what is happening to the boundary.
+</div>
+
+<!-- ══════════════════════════════════════
+     PART 2 — DATA TABLE
+══════════════════════════════════════ -->
+<div class="section-head">
+  <div class="section-num">2</div>
+  <div class="section-title">Measuring the Boundary</div>
+</div>
+
+<p style="font-size:13px;margin-bottom:14px;color:#374151">
+  Complete the table. Starting triangle side = <strong>9 cm</strong>. Each iteration replaces one segment with four segments, each <sup>1</sup>/<sub>3</sub> as long.
+</p>
+
+<table class="data-table">
+  <tr>
+    <th>Iteration</th>
+    <th class="center">Number of sides</th>
+    <th class="center">Length of each side</th>
+    <th class="center">Perimeter = sides × length</th>
+    <th class="center">× previous?</th>
+  </tr>
+  <tr>
+    <td class="mono">0</td>
+    <td class="mono">3</td>
+    <td class="mono">9 cm</td>
+    <td class="mono">27 cm</td>
+    <td class="center" style="font-size:11px;color:var(--muted)">—</td>
+  </tr>
+  <tr>
+    <td class="mono">1</td>
+    <td class="mono">12</td>
+    <td class="mono">3 cm</td>
+    <td class="mono">36 cm</td>
+    <td class="mono center">× 4/3</td>
+  </tr>
+  <tr>
+    <td class="mono">2</td>
+    <td class="fill"><span class="fill-line"></span></td>
+    <td class="fill"><span class="fill-line"></span></td>
+    <td class="fill"><span class="fill-line"></span></td>
+    <td class="fill"><span class="fill-line"></span></td>
+  </tr>
+  <tr>
+    <td class="mono">3</td>
+    <td class="fill"><span class="fill-line"></span></td>
+    <td class="fill"><span class="fill-line"></span></td>
+    <td class="fill"><span class="fill-line"></span></td>
+    <td class="fill"><span class="fill-line"></span></td>
+  </tr>
+  <tr>
+    <td class="mono">4</td>
+    <td class="fill"><span class="fill-line"></span></td>
+    <td class="fill"><span class="fill-line"></span></td>
+    <td class="fill"><span class="fill-line"></span></td>
+    <td class="fill"><span class="fill-line"></span></td>
+  </tr>
+  <tr class="formula-row">
+    <td class="formula-row">n (general)</td>
+    <td class="formula-row"><span class="fill-line"></span></td>
+    <td class="formula-row"><span class="fill-line"></span></td>
+    <td class="formula-row"><span class="fill-line"></span></td>
+    <td class="formula-row">× 4/3</td>
+  </tr>
+</table>
+<p style="font-size:11px;color:var(--muted);margin-bottom:28px;font-style:italic">
+  The purple row asks you to write a general formula in terms of n.
+</p>
+
+<!-- ══════════════════════════════════════
+     PART 3 — DISCUSSION QUESTIONS
+══════════════════════════════════════ -->
+<div class="section-head">
+  <div class="section-num">3</div>
+  <div class="section-title">What Is Happening?</div>
+</div>
+
+<div class="questions-block">
+  <div class="questions-header">Discussion Questions — answer in your group, then share with the class</div>
+  <div class="questions-body">
+
+    <div class="q-item">
+      <div class="q-stem">
+        <span class="q-num">Q1.</span>
+        Describe in words what happens to the <em>shape</em> of the boundary as the iteration number increases.
+      </div>
+      <div class="ans-lines">
+        <div class="ans-line-row"><div class="line"></div></div>
+        <div class="ans-line-row"><div class="line"></div></div>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-stem">
+        <span class="q-num">Q2.</span>
+        Look at the last column of your table. What is the ratio of each perimeter to the previous one?
+        Will the perimeter ever stop growing? Use your formula for row <em>n</em> to justify your answer.
+      </div>
+      <div class="ans-lines">
+        <div class="ans-line-row"><div class="line"></div></div>
+        <div class="ans-line-row"><div class="line"></div></div>
+        <div class="ans-line-row"><div class="line"></div></div>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-stem">
+        <span class="q-num">Q3.</span>
+        The Koch snowflake has a finite <em>area</em> — the region it encloses does not grow without bound.
+        Yet its <em>perimeter</em> grows forever. Does this surprise you? How is it possible?
+        <span class="hint">hint: think about what the boundary is doing</span>
+      </div>
+      <div class="ans-lines">
+        <div class="ans-line-row"><div class="line"></div></div>
+        <div class="ans-line-row"><div class="line"></div></div>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-stem">
+        <span class="q-num">Q4.</span>
+        A real coastline looks like the Koch snowflake: zoom in at any scale and you find more and more jagged detail.
+        Based on your investigation, what can you say about the "true perimeter" of a real coastline?
+      </div>
+      <div class="ans-lines">
+        <div class="ans-line-row"><div class="line"></div></div>
+        <div class="ans-line-row"><div class="line"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PART 4 — THE CONTRAST
+══════════════════════════════════════ -->
+<div class="section-head">
+  <div class="section-num">4</div>
+  <div class="section-title">What Makes a Polygon Different?</div>
+</div>
+
+<div class="contrast-grid">
+  <div class="contrast-card snowflake-cc">
+    <div class="cc-head">Koch Snowflake — Fractal Boundary</div>
+    <div class="cc-body">
+      Zoom in on any segment of the boundary and you find more jagged bumps.
+      There is always more detail hiding at smaller scales.
+      The "perimeter" you measure depends entirely on how finely you look.
+      <div class="perimeter-row">Perimeter at iteration n = 27 × (4/3)ⁿ → ∞</div>
+    </div>
+  </div>
+  <div class="contrast-card square-cc">
+    <div class="cc-head">Square — Polygon Boundary</div>
+    <div class="cc-body">
+      Zoom in on any side of a square and you find… a straight line. There is
+      <em>no hidden detail</em>. A 1 cm ruler and a 1 mm ruler give exactly the same
+      total length for the same side.
+      <div class="perimeter-row">Perimeter = 4 × side. The same, always.</div>
+    </div>
+  </div>
+</div>
+
+<div class="questions-block">
+  <div class="questions-header">The Key Question</div>
+  <div class="questions-body">
+
+    <div class="q-item">
+      <div class="q-stem">
+        <span class="q-num">Q5.</span>
+        A polygon has sides that are <strong>perfectly straight line segments</strong>.
+        Explain, in one or two sentences, why this means a polygon always has a unique, well-defined perimeter —
+        unlike a fractal or a coastline.
+      </div>
+      <div class="ans-lines">
+        <div class="ans-line-row"><div class="line"></div></div>
+        <div class="ans-line-row"><div class="line"></div></div>
+        <div class="ans-line-row"><div class="line"></div></div>
+      </div>
+      <div class="key-insight">
+        <strong>Target answer:</strong> A straight line segment has no hidden detail — it looks exactly the same
+        no matter how closely you examine it. This means every ruler, no matter how small, gives the same measurement.
+        So the perimeter of a polygon is a single, unchanging number. This is what makes polygons
+        so useful in mathematics: their boundaries are <em>exactly measurable</em>.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     FRACTAL DIMENSIONS SIDEBAR
+══════════════════════════════════════ -->
+<hr>
+
+<div class="fractal-fact">
+  <div class="ff-title">🌐 Going Further — Fractal Dimension</div>
+  The mathematician <strong>Benoît Mandelbrot</strong> (1967) asked: if a coastline is not quite a 1-dimensional
+  line and not quite a 2-dimensional area, what dimension <em>is</em> it? He invented <strong>fractal dimension</strong>
+  to answer this. A more "crinkled" boundary has a higher fractal dimension — closer to 2.
+  The Koch snowflake has fractal dimension log(4)/log(3) ≈ <strong>1.26</strong>.
+  <div class="dim-grid">
+    <div class="dim-item"><div class="dim-label">China's coastline</div><div class="dim-val">1.195D</div></div>
+    <div class="dim-item"><div class="dim-label">Great Britain</div><div class="dim-val">1.21D</div></div>
+    <div class="dim-item"><div class="dim-label">Norway (most complex)</div><div class="dim-val">1.52D</div></div>
+    <div class="dim-item"><div class="dim-label">Koch snowflake</div><div class="dim-val">1.26D</div></div>
+    <div class="dim-item"><div class="dim-label">Any polygon</div><div class="dim-val">exactly 1D</div></div>
+    <div class="dim-item"><div class="dim-label">Human lung surface</div><div class="dim-val">≈ 2.9D</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TEACHER ANSWER KEY
+══════════════════════════════════════ -->
+<div class="teacher-section">
+  <div class="ts-head">⚿ &nbsp; TEACHER ANSWER KEY — DO NOT DISTRIBUTE</div>
+  <div class="ts-body">
+
+    <table class="ans-table">
+      <tr>
+        <th>Iteration</th>
+        <th># sides</th>
+        <th>Side length</th>
+        <th>Perimeter</th>
+        <th>Ratio</th>
+      </tr>
+      <tr>
+        <td>0</td><td>3</td><td>9 cm</td><td>27 cm</td><td>—</td>
+      </tr>
+      <tr>
+        <td>1</td><td>12</td><td>3 cm</td><td>36 cm</td><td>× 4/3</td>
+      </tr>
+      <tr>
+        <td>2</td><td>48</td><td>1 cm</td><td class="growth">48 cm</td><td>× 4/3</td>
+      </tr>
+      <tr>
+        <td>3</td><td>192</td><td>1/3 cm</td><td class="growth">64 cm</td><td>× 4/3</td>
+      </tr>
+      <tr>
+        <td>4</td><td>768</td><td>1/9 cm</td><td class="growth">≈ 85.3 cm</td><td>× 4/3</td>
+      </tr>
+      <tr>
+        <td>n (general)</td>
+        <td>3 × 4ⁿ</td>
+        <td>9/3ⁿ = 3²⁻ⁿ cm</td>
+        <td class="growth">27 × (4/3)ⁿ cm → ∞</td>
+        <td>× 4/3</td>
+      </tr>
+    </table>
+
+    <div class="debrief-notes">
+      <p><strong>Q1:</strong> The boundary becomes more jagged/crinkled at every scale. No segment stays straight — each is replaced by a bent path. Yet the overall <em>shape</em> still looks like a snowflake (self-similar).</p>
+      <p><strong>Q2:</strong> Ratio = 4/3 ≈ 1.33 each time. Since 4/3 > 1, multiplying by it repeatedly means the perimeter grows without bound → no, it never stops. Formula: P_n = 27 × (4/3)ⁿ → ∞ as n → ∞.</p>
+      <p><strong>Q3:</strong> The area is bounded because the bumps fit inside a circle — the snowflake never escapes its bounding box. But the boundary itself becomes infinitely wiggly, packing more and more length into the same region. Length ≠ area.</p>
+      <p><strong>Q4:</strong> A real coastline has no unique, objective length. The measured length depends on the ruler size chosen. There is no "true" perimeter — only an answer relative to a chosen scale of measurement.</p>
+      <p><strong>Transition to lesson:</strong> "A polygon's sides are perfectly straight — no hidden bumps at any scale. So its perimeter is always the same number. This is exactly why we study polygon perimeter: it is a measurement we can trust. Now let's learn how to calculate it."</p>
+      <p><strong>Common confusion:</strong> Students may think a finer ruler always gives a more accurate answer (true for smooth curves like circles). Emphasize that fractals are different: they have structure at every scale, so finer measurement reveals new length, not just more precision.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT — DRAW SNOWFLAKES
+══════════════════════════════════════ -->
+<script>
+  // Koch curve: (x1,y1) → (x2,y2) at given depth
+  // For clockwise traversal in screen coords, bumps point outward.
+  function kochCurve(ctx, x1, y1, x2, y2, depth) {
+    if (depth === 0) {
+      ctx.lineTo(x2, y2);
+      return;
+    }
+    const dx = x2 - x1, dy = y2 - y1;
+    const ex = x1 + dx / 3,  ey = y1 + dy / 3;
+    const fx = x1 + 2*dx/3,  fy = y1 + 2*dy/3;
+    // Bump peak: rotate vector ef by -60° (outward for CW traversal in screen)
+    const SIN60 = Math.sqrt(3) / 2;
+    const gx = ex + (dx/3) * 0.5 + (dy/3) * SIN60;
+    const gy = ey - (dx/3) * SIN60 + (dy/3) * 0.5;
+    kochCurve(ctx, x1, y1, ex, ey, depth - 1);
+    kochCurve(ctx, ex, ey, gx, gy, depth - 1);
+    kochCurve(ctx, gx, gy, fx, fy, depth - 1);
+    kochCurve(ctx, fx, fy, x2, y2, depth - 1);
+  }
+
+  function drawSnowflake(canvasId, depth) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Equilateral triangle circumradius — fit with padding
+    const R = Math.min(W, H) * 0.40;
+    const cx = W / 2;
+    const cy = H / 2 + R * 0.08; // small vertical offset for visual balance
+
+    // Vertices (clockwise in screen coords → outward bumps)
+    const v0 = [cx,                cy - R          ];  // top
+    const v1 = [cx + R * 0.866,   cy + R * 0.5    ];  // bottom-right
+    const v2 = [cx - R * 0.866,   cy + R * 0.5    ];  // bottom-left
+
+    // Fill
+    ctx.beginPath();
+    ctx.moveTo(v0[0], v0[1]);
+    kochCurve(ctx, v0[0], v0[1], v1[0], v1[1], depth);
+    kochCurve(ctx, v1[0], v1[1], v2[0], v2[1], depth);
+    kochCurve(ctx, v2[0], v2[1], v0[0], v0[1], depth);
+    ctx.closePath();
+
+    ctx.fillStyle = '#e0f2fe';
+    ctx.fill();
+
+    // Stroke
+    ctx.beginPath();
+    ctx.moveTo(v0[0], v0[1]);
+    kochCurve(ctx, v0[0], v0[1], v1[0], v1[1], depth);
+    kochCurve(ctx, v1[0], v1[1], v2[0], v2[1], depth);
+    kochCurve(ctx, v2[0], v2[1], v0[0], v0[1], depth);
+    ctx.closePath();
+
+    ctx.strokeStyle = '#0d5c7a';
+    ctx.lineWidth = depth <= 1 ? 2 : 1;
+    ctx.stroke();
+  }
+
+  drawSnowflake('c0', 0);
+  drawSnowflake('c1', 1);
+  drawSnowflake('c2', 2);
+  drawSnowflake('c3', 3);
+</script>
+
+</body>
+</html>

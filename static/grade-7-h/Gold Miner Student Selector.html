@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold Miner - Student Selector</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #2c3e50;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+  }
+  h1 {
+    margin: 15px 0 5px 0;
+  }
+  p {
+    margin: 5px 0 15px 0;
+    color: #bdc3c7;
+  }
+  #game-container {
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    background-color: #8B4513; /* Dirt color */
+    border: 5px solid #5c2e0b;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 15%, #654321 15%, #3e2723 100%);
+  }
+  #modal {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 215, 0, 0.95);
+    color: #333;
+    padding: 40px 60px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    border: 5px solid #b8860b;
+    z-index: 10;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes popIn {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+  #modal h2 {
+    margin: 0 0 25px 0;
+    font-size: 3em;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+  }
+  #modal button {
+    padding: 12px 30px;
+    font-size: 1.5em;
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+  }
+  #modal button:hover {
+    background-color: #34495e;
+    transform: scale(1.05);
+  }
+  #controls {
+    margin-top: 20px;
+  }
+  button.action-btn {
+    padding: 12px 25px;
+    font-size: 1.2em;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: background 0.2s;
+  }
+  button.action-btn:hover {
+    background-color: #c0392b;
+  }
+</style>
+</head>
+<body>
+
+<h1>Gold Miner: Select a Student!</h1>
+<p>Click the game area or press Space to drop the claw and catch a student.</p>
+
+<div id="game-container">
+  <canvas id="gameCanvas" width="900" height="600"></canvas>
+  <div id="modal">
+    <h2 id="student-name">Student Name</h2>
+    <button id="next-btn">Continue</button>
+  </div>
+</div>
+
+<div id="controls">
+  <button class="action-btn" id="reset-btn">Reset Game</button>
+</div>
+
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const modal = document.getElementById('modal');
+  const studentNameEl = document.getElementById('student-name');
+  const nextBtn = document.getElementById('next-btn');
+  const resetBtn = document.getElementById('reset-btn');
+
+  const students = [
+    "Insha", "Angel Jiaying", "Daniel Amis", "Desmond", "Iris", "Olivia",
+    "Joyce", "Yuna Jo", "Isabella", "Nathan", "Kate", "Kanata",
+    "Niklas Zhao", "Luke", "Joab", "Katherine", "Yongze", "Amy Green",
+    "Cathy", "Jinyi", "Arthur Jiayou"
+  ];
+
+  let golds = [];
+  let gameState = 'swinging'; // swinging, extending, retracting, paused
+  
+  const originX = 450;
+  const originY = 90; // Just at the edge of the sky (15% of 600 is 90)
+  const minLength = 40;
+  let hookLength = minLength;
+  let hookAngle = 0;
+  let angleDir = 1;
+  const swingSpeed = 0.018; // Slower swing for easier aiming
+  const extendSpeed = 10;
+  const retractSpeedEmpty = 12;
+  const retractSpeedFull = 5; // Slower when carrying gold
+  const maxAngle = Math.PI / 2.3;
+  
+  let caughtGold = null;
+
+  function initGame() {
+    golds = [];
+    gameState = 'swinging';
+    hookLength = minLength;
+    hookAngle = 0;
+    caughtGold = null;
+    modal.style.display = 'none';
+
+    // Shuffle students to randomize sizes and positions
+    const shuffledStudents = [...students].sort(() => Math.random() - 0.5);
+
+    shuffledStudents.forEach(name => {
+      let valid = false;
+      let x, y, radius;
+      let attempts = 0;
+      
+      while (!valid && attempts < 200) {
+        radius = 20 + Math.random() * 25; // Random gold size
+        x = Math.max(radius + 30, Math.min(canvas.width - radius - 30, Math.random() * canvas.width));
+        y = Math.max(160 + radius, Math.min(canvas.height - radius - 20, 160 + Math.random() * (canvas.height - 160)));
+        
+        valid = true;
+        for (let g of golds) {
+          let dx = x - g.x;
+          let dy = y - g.y;
+          if (Math.sqrt(dx*dx + dy*dy) < radius + g.radius + 10) {
+            valid = false;
+            break;
+          }
+        }
+        attempts++;
+      }
+      golds.push({ x, y, radius, name, active: true, seed: Math.random() * 1000 });
+    });
+  }
+
+  function drawGold(g) {
+    if (!g.active && caughtGold !== g) return;
+    
+    ctx.save();
+    ctx.translate(g.x, g.y);
+    
+    // Draw gold nugget shape
+    ctx.beginPath();
+    ctx.fillStyle = '#FFD700'; // Gold
+    ctx.strokeStyle = '#DAA520'; // Dark gold border
+    ctx.lineWidth = 3;
+    
+    // Create an irregular polygon based on circle
+    const numPoints = 10;
+    for (let i = 0; i < numPoints; i++) {
+      const a = (i / numPoints) * Math.PI * 2;
+      // Use the seed to make the irregularity consistent per gold piece
+      const r = g.radius * (0.8 + 0.25 * Math.sin(i * g.seed)); 
+      const px = r * Math.cos(a);
+      const py = r * Math.sin(a);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    
+    // Draw highlights
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.arc(-g.radius*0.3, -g.radius*0.3, g.radius*0.25, 0, Math.PI*2);
+    ctx.fill();
+    
+    ctx.restore();
+  }
+
+  function drawHook(endX, endY) {
+    // Draw line
+    ctx.beginPath();
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Draw claw
+    ctx.save();
+    ctx.translate(endX, endY);
+    ctx.rotate(-hookAngle);
+    
+    ctx.beginPath();
+    ctx.strokeStyle = '#bdc3c7'; // Silver/iron color
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    // Left prong
+    ctx.moveTo(-12, -10);
+    ctx.lineTo(-20, 10);
+    ctx.lineTo(-8, 25);
+    
+    // Right prong
+    ctx.moveTo(12, -10);
+    ctx.lineTo(20, 10);
+    ctx.lineTo(8, 25);
+    
+    // Center connector
+    ctx.moveTo(-12, -10);
+    ctx.lineTo(12, -10);
+    
+    // Center block
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -10);
+    
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawMiner() {
+    // Mine cart / Base
+    ctx.fillStyle = '#2c3e50';
+    ctx.beginPath();
+    ctx.moveTo(originX - 50, originY - 10);
+    ctx.lineTo(originX + 50, originY - 10);
+    ctx.lineTo(originX + 40, originY + 10);
+    ctx.lineTo(originX - 40, originY + 10);
+    ctx.fill();
+
+    // Wheels
+    ctx.fillStyle = '#7f8c8d';
+    ctx.beginPath();
+    ctx.arc(originX - 30, originY + 10, 8, 0, Math.PI*2);
+    ctx.arc(originX + 30, originY + 10, 8, 0, Math.PI*2);
+    ctx.fill();
+    
+    // Winding mechanism
+    ctx.beginPath();
+    ctx.fillStyle = '#e74c3c';
+    ctx.arc(originX, originY - 15, 18, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#c0392b';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Wheel spokes
+    ctx.save();
+    ctx.translate(originX, originY - 15);
+    // Rotate wheel if hook is moving
+    if (gameState === 'extending' || gameState === 'retracting') {
+      ctx.rotate(hookLength * 0.05);
+    }
+    ctx.beginPath();
+    ctx.moveTo(-18, 0); ctx.lineTo(18, 0);
+    ctx.moveTo(0, -18); ctx.lineTo(0, 18);
+    ctx.strokeStyle = '#ecf0f1';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function update() {
+    if (gameState === 'swinging') {
+      hookAngle += swingSpeed * angleDir;
+      if (Math.abs(hookAngle) > maxAngle) {
+        angleDir *= -1;
+      }
+    } 
+    else if (gameState === 'extending') {
+      hookLength += extendSpeed;
+      
+      const hx = originX + Math.sin(hookAngle) * hookLength;
+      const hy = originY + Math.cos(hookAngle) * hookLength;
+      
+      // Check boundaries
+      if (hx < 0 || hx > canvas.width || hy > canvas.height) {
+        gameState = 'retracting';
+      }
+      
+      // Check collision with gold
+      for (let i = 0; i < golds.length; i++) {
+        let g = golds[i];
+        if (g.active) {
+          let dx = hx - g.x;
+          let dy = hy - g.y;
+          // Hook point collision detection (increased hit box for easier catching)
+          if (Math.sqrt(dx*dx + dy*dy) < g.radius + 35) { 
+            gameState = 'retracting';
+            caughtGold = g;
+            g.active = false; 
+            break;
+          }
+        }
+      }
+    }
+    else if (gameState === 'retracting') {
+      // Scale speed based on gold size (bigger gold = slower retract)
+      let speed = retractSpeedEmpty;
+      if (caughtGold) {
+        // Radius is 20 to 45
+        let weightFactor = (caughtGold.radius - 20) / 25; // 0 to 1
+        speed = retractSpeedFull - (weightFactor * 3); // ranges from roughly 5 to 2
+      }
+      
+      hookLength -= Math.max(speed, 1.5); // Minimum speed
+      
+      if (caughtGold) {
+        caughtGold.x = originX + Math.sin(hookAngle) * (hookLength + caughtGold.radius);
+        caughtGold.y = originY + Math.cos(hookAngle) * (hookLength + caughtGold.radius);
+      }
+      
+      if (hookLength <= minLength) {
+        hookLength = minLength;
+        if (caughtGold) {
+          gameState = 'paused';
+          studentNameEl.textContent = caughtGold.name;
+          modal.style.display = 'block';
+        } else {
+          gameState = 'swinging';
+        }
+      }
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw all active and caught golds
+    golds.forEach(drawGold);
+    
+    const hx = originX + Math.sin(hookAngle) * hookLength;
+    const hy = originY + Math.cos(hookAngle) * hookLength;
+    
+    drawHook(hx, hy);
+    drawMiner();
+  }
+
+  function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function dropHook() {
+    if (gameState === 'swinging') {
+      gameState = 'extending';
+    }
+  }
+
+  // Handle clicks on canvas
+  canvas.addEventListener('mousedown', dropHook);
+  
+  // Handle spacebar
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && modal.style.display !== 'block') {
+      dropHook();
+      e.preventDefault(); // prevent scrolling
+    } else if (e.code === 'Space' || e.code === 'Enter') {
+      if (modal.style.display === 'block') {
+        nextBtn.click();
+        e.preventDefault();
+      }
+    }
+  });
+
+  nextBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+    caughtGold = null;
+    gameState = 'swinging';
+    
+    if (golds.every(g => !g.active)) {
+      setTimeout(() => alert("All students have been selected! Great job!"), 500);
+    }
+  });
+
+  resetBtn.addEventListener('click', initGame);
+
+  initGame();
+  loop();
+
+</script>
+</body>
+</html>
