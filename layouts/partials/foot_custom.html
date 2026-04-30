@@ -1,0 +1,6 @@
+<script type="text/javascript" src="{{ "js/math-code.js" | relURL }}"></script>
+<script type="text/javascript" src="{{ "js/center-image.js" | relURL }}"></script>
+
+{{ if .Site.Params.enableMathJax }}
+  <script async src="https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+{{ end }}
