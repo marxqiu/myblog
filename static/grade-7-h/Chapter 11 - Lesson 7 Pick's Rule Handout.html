@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 11 - Lesson 7 Pick's Rule Handout</title>
+<style>
+  :root {
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #cbd5e1;
+    --soft: #f8fafc;
+    --soft-2: #eef2f7;
+    --accent: #0f766e;
+    --accent-2: #0f4c81;
+  }
+
+  * { box-sizing: border-box; }
+
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body {
+    margin: 0;
+    background: #e5e7eb;
+    color: var(--ink);
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.35;
+  }
+
+  .sheet {
+    width: 100%;
+    max-width: 210mm;
+    min-height: calc(297mm - 24mm);
+    margin: 0 auto 10mm;
+    padding: 10mm;
+    background: white;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .topline {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .title-block {
+    border-top: 4px solid var(--accent);
+    padding-top: 10px;
+  }
+
+  .eyebrow {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.6px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 27px;
+    line-height: 1.1;
+  }
+
+  .subtitle {
+    margin-top: 5px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .callout {
+    background: var(--soft);
+    border-left: 4px solid var(--accent-2);
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .section {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .section-head {
+    background: var(--soft-2);
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+  }
+
+  .section-body {
+    padding: 10px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .mini-box {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: #fff;
+  }
+
+  .mini-box strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--accent-2);
+  }
+
+  .figure-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .figure-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px;
+    break-inside: avoid;
+  }
+
+  .figure-label {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .figure-label span:last-child {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .svg-wrap {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #fff;
+    padding: 6px;
+    margin-bottom: 8px;
+  }
+
+  .figure-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .blank-chip {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 8px;
+    text-align: center;
+    background: var(--soft);
+  }
+
+  .blank {
+    display: inline-block;
+    min-width: 42px;
+    border-bottom: 1.4px solid #6b7280;
+    height: 16px;
+    vertical-align: bottom;
+  }
+
+  .blank.long { min-width: 120px; }
+  .blank.xlong { min-width: 220px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  th, td {
+    border: 1px solid var(--line);
+    padding: 7px 8px;
+    vertical-align: middle;
+  }
+
+  th {
+    background: var(--soft-2);
+    text-align: left;
+  }
+
+  .center { text-align: center; }
+
+  .formula-box {
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    background: #f0fdfa;
+    margin-top: 8px;
+  }
+
+  .line-stack {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .writing-line {
+    border-bottom: 1px solid var(--line);
+    height: 20px;
+  }
+
+  .small {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .prompt-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+  }
+
+  .prompt-list li + li {
+    margin-top: 5px;
+  }
+
+  .check-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .footer-note {
+    margin-top: auto;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .tight { margin: 0; }
+
+  @media print {
+    body {
+      background: white;
+    }
+
+    .sheet {
+      margin: 0;
+      box-shadow: none;
+      page-break-after: always;
+    }
+
+    .sheet:last-child {
+      page-break-after: auto;
+    }
+  }
+</style>
+</head>
+<body>
+  <section class="sheet">
+    <div class="topline">
+      <div><strong>Name:</strong> <span class="blank xlong"></span></div>
+      <div><strong>Date:</strong> April 16, 2026</div>
+      <div><strong>Chapter 11 - Lesson 7</strong></div>
+    </div>
+
+    <div class="title-block">
+      <div class="eyebrow">Investigation Handout</div>
+      <h1>Pick's Rule for Area</h1>
+    </div>
+
+    <div class="section">
+      <div class="section-head">1. Teacher Demo Polygon</div>
+      <div class="section-body two-col">
+        <div>
+          <div class="svg-wrap" id="figure-hook"></div>
+          <div class="small">Count carefully: a corner counts once, and any dot touching the edge is a boundary point.</div>
+        </div>
+        <div>
+          <div class="info-grid">
+            <div class="mini-box">
+              <strong>B</strong>
+              Boundary points
+            </div>
+            <div class="mini-box">
+              <strong>I</strong>
+              Interior points
+            </div>
+            <div class="mini-box">
+              <strong>A</strong>
+              Area in square units
+            </div>
+          </div>
+          <div style="margin-top: 12px; font-size: 13px;">
+            <p class="tight"><strong>Record the teacher's result:</strong></p>
+            <p>B = <span class="blank"></span></p>
+            <p>I = <span class="blank"></span></p>
+            <p>A = <span class="blank"></span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">2. Investigation Figures</div>
+      <div class="section-body">
+        <p style="margin-top: 0; margin-bottom: 10px; font-size: 13px;">
+          For each figure, count <strong>B</strong>, count <strong>I</strong>, and calculate the area <strong>A</strong> using any method you already know.
+        </p>
+        <div class="figure-grid">
+          <div class="figure-card">
+            <div class="figure-label"><span>Figure a</span><span>square</span></div>
+            <div class="svg-wrap" id="figure-a"></div>
+            <div class="figure-meta">
+              <div class="blank-chip">B = <span class="blank"></span></div>
+              <div class="blank-chip">I = <span class="blank"></span></div>
+              <div class="blank-chip">A = <span class="blank"></span></div>
+            </div>
+          </div>
+
+          <div class="figure-card">
+            <div class="figure-label"><span>Figure b</span><span>square</span></div>
+            <div class="svg-wrap" id="figure-b"></div>
+            <div class="figure-meta">
+              <div class="blank-chip">B = <span class="blank"></span></div>
+              <div class="blank-chip">I = <span class="blank"></span></div>
+              <div class="blank-chip">A = <span class="blank"></span></div>
+            </div>
+          </div>
+
+          <div class="figure-card">
+            <div class="figure-label"><span>Figure c</span><span>triangle</span></div>
+            <div class="svg-wrap" id="figure-c"></div>
+            <div class="figure-meta">
+              <div class="blank-chip">B = <span class="blank"></span></div>
+              <div class="blank-chip">I = <span class="blank"></span></div>
+              <div class="blank-chip">A = <span class="blank"></span></div>
+            </div>
+          </div>
+
+          <div class="figure-card">
+            <div class="figure-label"><span>Figure d</span><span>irregular polygon</span></div>
+            <div class="svg-wrap" id="figure-d"></div>
+            <div class="figure-meta">
+              <div class="blank-chip">B = <span class="blank"></span></div>
+              <div class="blank-chip">I = <span class="blank"></span></div>
+              <div class="blank-chip">A = <span class="blank"></span></div>
+            </div>
+          </div>
+
+          <div class="figure-card">
+            <div class="figure-label"><span>Figure e</span><span>irregular polygon</span></div>
+            <div class="svg-wrap" id="figure-e"></div>
+            <div class="figure-meta">
+              <div class="blank-chip">B = <span class="blank"></span></div>
+              <div class="blank-chip">I = <span class="blank"></span></div>
+              <div class="blank-chip">A = <span class="blank"></span></div>
+            </div>
+          </div>
+
+          <div class="figure-card">
+            <div class="figure-label"><span>Figure f</span><span>irregular polygon</span></div>
+            <div class="svg-wrap" id="figure-f"></div>
+            <div class="figure-meta">
+              <div class="blank-chip">B = <span class="blank"></span></div>
+              <div class="blank-chip">I = <span class="blank"></span></div>
+              <div class="blank-chip">A = <span class="blank"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">3. Summary Table</div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Figure</th>
+              <th class="center">B</th>
+              <th class="center">I</th>
+              <th class="center">A</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>demo polygon</td>
+              <td class="center"></td>
+              <td class="center"></td>
+              <td class="center"></td>
+            </tr>
+            <tr><td>a</td><td></td><td></td><td></td></tr>
+            <tr><td>b</td><td></td><td></td><td></td></tr>
+            <tr><td>c</td><td></td><td></td><td></td></tr>
+            <tr><td>d</td><td></td><td></td><td></td></tr>
+            <tr><td>e</td><td></td><td></td><td></td></tr>
+            <tr><td>f</td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer-note">Page 1 of 2</div>
+  </section>
+
+  <section class="sheet">
+    <div class="section">
+      <div class="section-head">4. Pattern Hunt</div>
+      <div class="section-body">
+        <ol class="prompt-list">
+          <li>After the first two rows, write a guess for a relationship between <strong>B</strong>, <strong>I</strong>, and <strong>A</strong>.</li>
+          <li>Test your guess against the other rows. If it fails, revise it.</li>
+          <li>Write the final rule only when you are convinced it works for all the figures.</li>
+        </ol>
+
+        <div style="margin-top: 12px; font-size: 13px;">
+          <p><strong>My first guess:</strong> <span class="blank xlong"></span></p>
+          <p><strong>After testing:</strong> <span class="blank xlong"></span></p>
+        </div>
+
+        <div class="line-stack">
+          <div class="writing-line"></div>
+          <div class="writing-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">5. Classwork Check - Verify the Rule on Your Own Polygon</div>
+      <div class="section-body">
+        <p style="margin-top: 0; font-size: 13px;">
+          Draw your own lattice polygon on the blank grid. Make it at least 5 sides and not a rectangle. Then count <strong>B</strong>, count <strong>I</strong>, use Pick's Rule to predict the area, and verify the area by decomposition or square-counting.
+        </p>
+        <div class="svg-wrap" id="blank-grid"></div>
+        <div class="check-row" style="font-size: 13px;">
+          <div>
+            <p>B = <span class="blank"></span></p>
+            <p>I = <span class="blank"></span></p>
+            <p>Pick's Rule area = <span class="blank long"></span></p>
+          </div>
+          <div>
+            <p>Checked by decomposition / square-counting:</p>
+            <div class="line-stack">
+              <div class="writing-line"></div>
+              <div class="writing-line"></div>
+              <div class="writing-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">6. Final Statement</div>
+      <div class="section-body" style="font-size: 13px;">
+        <p><strong>Write Pick's Rule in words:</strong></p>
+        <div class="line-stack">
+          <div class="writing-line"></div>
+          <div class="writing-line"></div>
+        </div>
+        <p style="margin-top: 12px;"><strong>Write it as a formula:</strong> A = <span class="blank"></span></p>
+      </div>
+    </div>
+
+    <div class="footer-note">Page 2 of 2</div>
+  </section>
+
+<script>
+  const figures = {
+    hook: { points: [[0, 0], [4, 0], [4, 3], [2, 3], [2, 2], [0, 2]] },
+    a:    { points: [[0, 0], [2, 0], [2, 2], [0, 2]] },
+    b:    { points: [[0, 0], [3, 0], [3, 3], [0, 3]] },
+    c:    { points: [[0, 0], [4, 0], [1, 3]] },
+    d:    { points: [[0, 0], [0, 4], [3, 4], [4, 3], [4, 2]] },
+    e:    { points: [[0, 3], [2, 4], [5, 4], [5, 1], [4, 1], [4, 0], [3, 0]] },
+    f:    { points: [[0, 0], [0, 3], [1, 4], [6, 3], [6, 1], [5, 3], [3, 0]] }
+  };
+
+  const cell = 26;
+  const pad = 1;
+
+  function bounds(points) {
+    const xs = points.map(p => p[0]);
+    const ys = points.map(p => p[1]);
+    return {
+      minX: Math.min(...xs),
+      maxX: Math.max(...xs),
+      minY: Math.min(...ys),
+      maxY: Math.max(...ys)
+    };
+  }
+
+  function latticeToSvg(x, y, totalHeight) {
+    const px = (x + pad) * cell;
+    const py = (totalHeight - (y + pad)) * cell;
+    return [px, py];
+  }
+
+  function polygonSvg(points, opts = {}) {
+    const box = bounds(points);
+    const widthCells = box.maxX - box.minX + 1 + pad * 2;
+    const heightCells = box.maxY - box.minY + 1 + pad * 2;
+    const width = widthCells * cell;
+    const height = heightCells * cell;
+
+    const shifted = points.map(([x, y]) => [x - box.minX, y - box.minY]);
+    const shiftedBox = bounds(shifted);
+    const totalHeight = shiftedBox.maxY - shiftedBox.minY + 1 + pad * 2;
+
+    const polygonPoints = shifted.map(([x, y]) => {
+      const [px, py] = latticeToSvg(x, y, totalHeight);
+      return px + "," + py;
+    }).join(" ");
+
+    let dots = "";
+    for (let x = 0; x <= shiftedBox.maxX; x++) {
+      for (let y = 0; y <= shiftedBox.maxY; y++) {
+        const [px, py] = latticeToSvg(x, y, totalHeight);
+        dots += '<circle cx="' + px + '" cy="' + py + '" r="2.3" fill="#94a3b8"></circle>';
+      }
+    }
+
+    const stroke = opts.stroke || "#0f4c81";
+    const fill = opts.fill || "rgba(15, 118, 110, 0.14)";
+
+    return [
+      '<svg viewBox="0 0 ' + width + " " + height + '" width="100%" height="170" aria-hidden="true">',
+      '<rect x="0" y="0" width="' + width + '" height="' + height + '" fill="white"></rect>',
+      dots,
+      '<polygon points="' + polygonPoints + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="3" stroke-linejoin="round"></polygon>',
+      '</svg>'
+    ].join("");
+  }
+
+  function blankGridSvg(cols, rows) {
+    const width = (cols + pad * 2) * cell;
+    const height = (rows + pad * 2) * cell;
+    let dots = "";
+    for (let x = 0; x <= cols; x++) {
+      for (let y = 0; y <= rows; y++) {
+        const px = (x + pad) * cell;
+        const py = (rows + pad - y) * cell;
+        dots += '<circle cx="' + px + '" cy="' + py + '" r="2.1" fill="#94a3b8"></circle>';
+      }
+    }
+
+    return [
+      '<svg viewBox="0 0 ' + width + " " + height + '" width="100%" height="300" aria-hidden="true">',
+      '<rect x="0" y="0" width="' + width + '" height="' + height + '" fill="white"></rect>',
+      dots,
+      '</svg>'
+    ].join("");
+  }
+
+  document.getElementById("figure-hook").innerHTML = polygonSvg(figures.hook.points);
+  document.getElementById("figure-a").innerHTML = polygonSvg(figures.a.points);
+  document.getElementById("figure-b").innerHTML = polygonSvg(figures.b.points);
+  document.getElementById("figure-c").innerHTML = polygonSvg(figures.c.points);
+  document.getElementById("figure-d").innerHTML = polygonSvg(figures.d.points);
+  document.getElementById("figure-e").innerHTML = polygonSvg(figures.e.points);
+  document.getElementById("figure-f").innerHTML = polygonSvg(figures.f.points);
+  document.getElementById("blank-grid").innerHTML = blankGridSvg(10, 8);
+</script>
+</body>
+</html>

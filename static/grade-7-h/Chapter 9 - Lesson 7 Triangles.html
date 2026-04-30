@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Triangles for Investigation — Chapter 20</title>
+<style>
+  @media print {
+    body { margin: 10mm; }
+    .grid { gap: 12px; }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    margin: 24px;
+    color: #1a1a1a;
+    background: #fff;
+  }
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 24px;
+    font-weight: 700;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .card {
+    border: 2px solid #333;
+    border-radius: 6px;
+    padding: 8px 8px 4px;
+    text-align: center;
+    background: #fff;
+  }
+  .card h3 {
+    font-size: 16px;
+    margin-bottom: 2px;
+    font-weight: 700;
+  }
+  svg {
+    display: block;
+    margin: 0 auto;
+  }
+  svg text {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-weight: 700;
+    fill: #1a1a1a;
+  }
+  .side-label { font-size: 17px; }
+  .triangle-line {
+    stroke: #1a1a1a;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linejoin: round;
+  }
+  .right-angle-mark {
+    stroke: #1a1a1a;
+    stroke-width: 1.8;
+    fill: none;
+  }
+</style>
+</head>
+<body>
+
+<h1>Triangles for Investigation</h1>
+
+<div class="grid">
+
+  <!-- ===== Triangle A: 3, 4, 5  (right-angled, right angle bottom-left) ===== -->
+  <div class="card">
+    <h3>Triangle A</h3>
+    <svg viewBox="0 0 250 210" width="250" height="210">
+      <polygon points="45,185 185,185 45,80" class="triangle-line"/>
+      <!-- right angle mark -->
+      <polyline points="59,185 59,171 45,171" class="right-angle-mark"/>
+      <!-- side labels -->
+      <text x="115" y="205" text-anchor="middle" class="side-label">4</text>
+      <text x="24" y="138" text-anchor="middle" class="side-label">3</text>
+      <text x="128" y="123" text-anchor="middle" class="side-label">5</text>
+    </svg>
+  </div>
+
+  <!-- ===== Triangle B: 5, 12, 13  (right-angled, right angle bottom-right) ===== -->
+  <div class="card">
+    <h3>Triangle B</h3>
+    <svg viewBox="0 0 250 210" width="250" height="210">
+      <polygon points="30,185 210,185 210,110" class="triangle-line"/>
+      <!-- right angle mark at bottom-right -->
+      <polyline points="196,185 196,171 210,171" class="right-angle-mark"/>
+      <!-- side labels -->
+      <text x="120" y="205" text-anchor="middle" class="side-label">12</text>
+      <text x="232" y="152" text-anchor="middle" class="side-label">5</text>
+      <text x="107" y="140" text-anchor="middle" class="side-label">13</text>
+    </svg>
+  </div>
+
+  <!-- ===== Triangle C: 5, 6, 7  (acute — NO right angle) ===== -->
+  <div class="card">
+    <h3>Triangle C</h3>
+    <svg viewBox="0 0 250 210" width="250" height="210">
+      <!-- base=7 bottom, left side=6, right side=5 -->
+      <!-- apex at (4.286, 4.199) unscaled, ×25 + offset -->
+      <polygon points="35,185 210,185 142,80" class="triangle-line"/>
+      <text x="122" y="205" text-anchor="middle" class="side-label">7</text>
+      <text x="74" y="124" text-anchor="middle" class="side-label">6</text>
+      <text x="190" y="124" text-anchor="middle" class="side-label">5</text>
+    </svg>
+  </div>
+
+  <!-- ===== Triangle D: 6, 8, 10  (right-angled, right angle bottom-left) ===== -->
+  <div class="card">
+    <h3>Triangle D</h3>
+    <svg viewBox="0 0 250 210" width="250" height="210">
+      <polygon points="40,185 200,185 40,65" class="triangle-line"/>
+      <!-- right angle mark -->
+      <polyline points="54,185 54,171 40,171" class="right-angle-mark"/>
+      <text x="120" y="205" text-anchor="middle" class="side-label">8</text>
+      <text x="20" y="130" text-anchor="middle" class="side-label">6</text>
+      <text x="134" y="115" text-anchor="middle" class="side-label">10</text>
+    </svg>
+  </div>
+
+  <!-- ===== Triangle E: 3, 5, 7  (obtuse — NO right angle) ===== -->
+  <div class="card">
+    <h3>Triangle E</h3>
+    <svg viewBox="0 0 250 210" width="250" height="210">
+      <!-- base=7 bottom, left side=5, right side=3 -->
+      <!-- apex at (4.643, 1.855) unscaled, ×28 + offset -->
+      <polygon points="25,185 221,185 155,133" class="triangle-line"/>
+      <text x="123" y="205" text-anchor="middle" class="side-label">7</text>
+      <text x="76" y="150" text-anchor="middle" class="side-label">5</text>
+      <text x="202" y="150" text-anchor="middle" class="side-label">3</text>
+    </svg>
+  </div>
+
+  <!-- ===== Triangle F: 8, 15, 17  (right-angled, right angle bottom-left) ===== -->
+  <div class="card">
+    <h3>Triangle F</h3>
+    <svg viewBox="0 0 250 210" width="250" height="210">
+      <polygon points="30,185 210,185 30,85" class="triangle-line"/>
+      <!-- right angle mark -->
+      <polyline points="44,185 44,171 30,171" class="right-angle-mark"/>
+      <text x="120" y="205" text-anchor="middle" class="side-label">15</text>
+      <text x="12" y="140" text-anchor="middle" class="side-label">8</text>
+      <text x="134" y="125" text-anchor="middle" class="side-label">17</text>
+    </svg>
+  </div>
+
+  <!-- ===== Triangle G: 7, 8, 9  (acute — NO right angle) ===== -->
+  <div class="card">
+    <h3>Triangle G</h3>
+    <svg viewBox="0 0 250 210" width="250" height="210">
+      <!-- base=9 bottom, left side=8, right side=7 -->
+      <!-- apex at (5.333, 5.963) unscaled, ×20 + offset -->
+      <polygon points="30,185 210,185 137,66" class="triangle-line"/>
+      <text x="120" y="205" text-anchor="middle" class="side-label">9</text>
+      <text x="70" y="118" text-anchor="middle" class="side-label">8</text>
+      <text x="188" y="118" text-anchor="middle" class="side-label">7</text>
+    </svg>
+  </div>
+
+  <!-- ===== Triangle H: 7, 24, 25  (right-angled, right angle bottom-right) ===== -->
+  <div class="card">
+    <h3>Triangle H</h3>
+    <svg viewBox="0 0 250 210" width="250" height="210">
+      <polygon points="18,185 210,185 210,125" class="triangle-line"/>
+      <!-- right angle mark at bottom-right -->
+      <polyline points="196,185 196,171 210,171" class="right-angle-mark"/>
+      <text x="114" y="205" text-anchor="middle" class="side-label">24</text>
+      <text x="226" y="158" text-anchor="middle" class="side-label">7</text>
+      <text x="100" y="148" text-anchor="middle" class="side-label">25</text>
+    </svg>
+  </div>
+
+</div>
+
+</body>
+</html>

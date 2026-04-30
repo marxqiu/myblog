@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lines relationship explorer — Chapter 8</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #f8f9fa;
+    }
+    h1 { font-size: 1.25rem; margin: 0 0 0.5rem; color: #1a1a2e; }
+    .instructions { font-size: 0.9rem; color: #444; margin-bottom: 0.75rem; }
+    .canvas-wrap {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 8px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      max-width: 700px;
+      height: 400px;
+    }
+    line { stroke-width: 2; stroke: #666; transition: stroke 0.2s, stroke-width 0.2s; }
+    line.highlight { stroke: #0d6efd; stroke-width: 4; }
+    .controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background: #0d6efd;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover { background: #0b5ed7; }
+    button:active { transform: scale(0.98); }
+    .log {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      gap: 0.5rem;
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 0.75rem;
+      min-height: 100px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      align-items: center;
+    }
+    .snapshot {
+      flex: 0 0 auto;
+      width: 220px;
+      height: 140px;
+      border: 2px solid #dee2e6;
+      border-radius: 4px;
+      background: #fafafa;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .snapshot:hover { border-color: #adb5bd; }
+    .snapshot.selected {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.35);
+    }
+    .snapshot svg { width: 100%; height: 100%; display: block; pointer-events: none; }
+    .snapshot line { stroke: #0d6efd; stroke-width: 2.5; }
+    .groups { margin-top: 1.25rem; }
+    .groups h3 { font-size: 1rem; margin: 0 0 0.5rem; color: #1a1a2e; }
+    .group-row {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      gap: 0.5rem;
+      min-height: 100px;
+      padding: 0.5rem;
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      overflow-x: auto;
+      align-items: center;
+    }
+    .group-row .snapshot { cursor: pointer; }
+    .group-block { margin-bottom: 1rem; }
+    .group-block .group-header { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem; }
+    .group-block .group-label { font-weight: 600; font-size: 0.95rem; }
+    .group-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .group-actions button.secondary { background: #6c757d; }
+    .group-actions button.secondary:hover { background: #5c636a; }
+    button.danger { background: #dc3545; }
+    button.danger:hover { background: #bb2d3b; }
+  </style>
+</head>
+<body>
+  <h1>Lines relationship explorer</h1>
+  <p class="instructions">Click <strong>Pick random pair</strong> to select two lines; a snapshot is added to your record. Use the snapshots to summarize: what relationships can two lines have?</p>
+
+  <div class="canvas-wrap">
+    <svg id="svg" viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="controls">
+    <button type="button" id="pick">Pick random pair</button>
+    <button type="button" id="clear">Clear selection & log</button>
+  </div>
+
+  <p class="instructions"><strong>Your record</strong> — scroll horizontally to see all snapshots. Click a snapshot to select it (click again to deselect). Then move selected ones into a group below.</p>
+  <div class="log" id="log"></div>
+
+  <div class="groups">
+    <h3>Group your snapshots</h3>
+    <p class="instructions">Select snapshots above, then click <strong>Move selected to Group 1</strong> (or another group). Add more groups when you need them. Click a snapshot in a group to send it back to the record.</p>
+    <div class="group-actions">
+      <button type="button" id="addGroup" class="secondary">Add group</button>
+    </div>
+    <div id="groupsContainer"></div>
+  </div>
+
+  <script>
+    (function () {
+      const svg = document.getElementById('svg');
+      const pickBtn = document.getElementById('pick');
+      const clearBtn = document.getElementById('clear');
+      const logEl = document.getElementById('log');
+      const groupsContainer = document.getElementById('groupsContainer');
+      const addGroupBtn = document.getElementById('addGroup');
+      let groupCount = 0;
+
+      // Fixed set of lines: many parallel (horizontal/vertical families) to increase chance of parallel pairs
+      const lines = [
+        { id: 1, x1: 50, y1: 80, x2: 650, y2: 100 },
+        { id: 2, x1: 80, y1: 350, x2: 620, y2: 330 },
+        { id: 3, x1: 100, y1: 50, x2: 110, y2: 350 },
+        { id: 4, x1: 350, y1: 30, x2: 360, y2: 370 },
+        { id: 5, x1: 600, y1: 40, x2: 610, y2: 360 },
+        { id: 6, x1: 50, y1: 200, x2: 650, y2: 200 },
+        { id: 7, x1: 100, y1: 350, x2: 650, y2: 80 },
+        { id: 8, x1: 80, y1: 60, x2: 400, y2: 340 },
+        { id: 9, x1: 200, y1: 50, x2: 500, y2: 350 },
+        { id: 10, x1: 50, y1: 250, x2: 400, y2: 100 },
+        { id: 11, x1: 300, y1: 380, x2: 650, y2: 50 },
+        { id: 12, x1: 150, y1: 350, x2: 550, y2: 120 },
+        { id: 13, x1: 50, y1: 60, x2: 650, y2: 60 },
+        { id: 14, x1: 50, y1: 140, x2: 650, y2: 140 },
+        { id: 15, x1: 50, y1: 260, x2: 650, y2: 260 },
+        { id: 16, x1: 50, y1: 320, x2: 650, y2: 320 },
+        { id: 17, x1: 250, y1: 0, x2: 250, y2: 400 },
+        { id: 18, x1: 450, y1: 0, x2: 450, y2: 400 },
+        { id: 19, x1: 150, y1: 0, x2: 150, y2: 400 },
+        { id: 20, x1: 500, y1: 0, x2: 500, y2: 400 },
+        { id: 21, x1: 50, y1: 90, x2: 650, y2: 110 },
+        { id: 22, x1: 200, y1: 340, x2: 600, y2: 360 },
+      ];
+
+      function vec(x1, y1, x2, y2) {
+        return { x: x2 - x1, y: y2 - y1 };
+      }
+      function cross(a, b) { return a.x * b.y - a.y * b.x; }
+      function dot(a, b) { return a.x * b.x + a.y * b.y; }
+      function len(v) { return Math.hypot(v.x, v.y); }
+
+      function intersectAndAngle(l1, l2) {
+        const v1 = vec(l1.x1, l1.y1, l1.x2, l1.y2);
+        const v2 = vec(l2.x1, l2.y1, l2.x2, l2.y2);
+        const d = cross(v1, v2);
+        if (Math.abs(d) < 1e-9) return null; // parallel
+        const w = vec(l1.x1, l1.y1, l2.x1, l2.y1);
+        const t = cross(w, v2) / d;
+        const px = l1.x1 + t * v1.x;
+        const py = l1.y1 + t * v1.y;
+        const u1 = { x: v1.x / len(v1), y: v1.y / len(v1) };
+        const u2 = { x: v2.x / len(v2), y: v2.y / len(v2) };
+        let rad = Math.acos(Math.max(-1, Math.min(1, dot(u1, u2))));
+        let deg = (rad * 180 / Math.PI) | 0;
+        if (deg > 90) deg = 180 - deg;
+        return { px, py, deg };
+      }
+
+      function render() {
+        svg.innerHTML = '';
+        lines.forEach(function (l) {
+          const lineEl = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          lineEl.setAttribute('x1', l.x1);
+          lineEl.setAttribute('y1', l.y1);
+          lineEl.setAttribute('x2', l.x2);
+          lineEl.setAttribute('y2', l.y2);
+          lineEl.setAttribute('data-id', l.id);
+          lineEl.setAttribute('class', 'line');
+          svg.appendChild(lineEl);
+        });
+      }
+
+      function highlight(ids) {
+        svg.querySelectorAll('.line').forEach(function (el) {
+          el.classList.toggle('highlight', ids.includes(parseInt(el.getAttribute('data-id'), 10)));
+        });
+      }
+
+      function makeSnapshot(l1, l2) {
+        const xCoords = [l1.x1, l1.x2, l2.x1, l2.x2];
+        const yCoords = [l1.y1, l1.y2, l2.y1, l2.y2];
+        const minX = Math.min.apply(null, xCoords);
+        const maxX = Math.max.apply(null, xCoords);
+        const minY = Math.min.apply(null, yCoords);
+        const maxY = Math.max.apply(null, yCoords);
+        const pad = 20;
+        const vbX = minX - pad;
+        const vbY = minY - pad;
+        const vbW = (maxX - minX) + 2 * pad;
+        const vbH = (maxY - minY) + 2 * pad;
+        const viewBox = vbX + ' ' + vbY + ' ' + vbW + ' ' + vbH;
+        const snap = document.createElement('div');
+        snap.className = 'snapshot';
+        const snapSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        snapSvg.setAttribute('viewBox', viewBox);
+        snapSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        ['line', 'line'].forEach(function (_, i) {
+          const l = i === 0 ? l1 : l2;
+          const lineEl = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          lineEl.setAttribute('x1', l.x1);
+          lineEl.setAttribute('y1', l.y1);
+          lineEl.setAttribute('x2', l.x2);
+          lineEl.setAttribute('y2', l.y2);
+          snapSvg.appendChild(lineEl);
+        });
+        snap.appendChild(snapSvg);
+        snap.setAttribute('tabindex', '0');
+        snap.addEventListener('click', function (e) {
+          if (snap.parentElement === logEl) {
+            snap.classList.toggle('selected');
+          } else {
+            logEl.appendChild(snap);
+            snap.classList.remove('selected');
+          }
+        });
+        return snap;
+      }
+
+      function getSelectedInRecord() {
+        return Array.from(logEl.querySelectorAll('.snapshot.selected'));
+      }
+
+      function moveSelectedTo(groupEl) {
+        getSelectedInRecord().forEach(function (snap) {
+          snap.classList.remove('selected');
+          groupEl.appendChild(snap);
+        });
+      }
+
+      function addGroup() {
+        groupCount += 1;
+        const n = groupCount;
+        const block = document.createElement('div');
+        block.className = 'group-block';
+        const header = document.createElement('div');
+        header.className = 'group-header';
+        const label = document.createElement('span');
+        label.className = 'group-label';
+        label.textContent = 'Group ' + n;
+        const moveBtn = document.createElement('button');
+        moveBtn.type = 'button';
+        moveBtn.className = 'secondary';
+        moveBtn.textContent = 'Move selected to Group ' + n;
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'danger';
+        deleteBtn.textContent = 'Delete group';
+        const row = document.createElement('div');
+        row.className = 'group-row';
+        moveBtn.addEventListener('click', function () { moveSelectedTo(row); });
+        deleteBtn.addEventListener('click', function () {
+          while (row.firstChild) logEl.appendChild(row.firstChild);
+          block.remove();
+        });
+        header.appendChild(label);
+        header.appendChild(moveBtn);
+        header.appendChild(deleteBtn);
+        block.appendChild(header);
+        block.appendChild(row);
+        groupsContainer.appendChild(block);
+      }
+
+      addGroupBtn.addEventListener('click', addGroup);
+      addGroup();
+
+      pickBtn.addEventListener('click', function () {
+        const a = (Math.random() * lines.length) | 0;
+        let b = (Math.random() * lines.length) | 0;
+        while (b === a) b = (Math.random() * lines.length) | 0;
+        const l1 = lines[a];
+        const l2 = lines[b];
+        highlight([l1.id, l2.id]);
+        const snap = makeSnapshot(l1, l2);
+        logEl.appendChild(snap);
+        logEl.scrollLeft = logEl.scrollWidth;
+      });
+
+      clearBtn.addEventListener('click', function () {
+        highlight([]);
+        logEl.innerHTML = '';
+        groupsContainer.innerHTML = '';
+        groupCount = 0;
+        addGroup();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

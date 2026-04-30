@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Koch Snowflake — Iterations</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0b1120;
+    --card:    #111827;
+    --border:  #1e2d45;
+    --cyan:    #38bdf8;
+    --cyan2:   #7dd3fc;
+    --fill:    rgba(56, 189, 248, 0.08);
+    --muted:   #64748b;
+    --text:    #e2e8f0;
+    --dim:     #94a3b8;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    gap: 32px;
+  }
+
+  /* ── TITLE ── */
+  .title-block {
+    text-align: center;
+  }
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  h1 strong { font-weight: 700; color: var(--cyan); }
+  .subtitle {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── GALLERY ── */
+  .gallery {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--cyan); }
+
+  canvas {
+    display: block;
+  }
+
+  .iter-badge {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .iter-badge span {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--cyan);
+    display: block;
+    letter-spacing: 0;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  /* ── STATS (hidden until revealed) ── */
+  .stats {
+    width: 100%;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .stats.visible {
+    visibility: visible;
+    opacity: 1;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    gap: 10px;
+  }
+  .stat-label { color: var(--muted); }
+  .stat-val {
+    font-weight: 600;
+    color: var(--cyan2);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-val.perimeter { color: #a78bfa; }
+
+  /* ── RATIO ARROWS ── */
+  .arrow-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .ratio-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .ratio-badge.visible {
+    visibility: visible;
+    opacity: 1;
+  }
+  .ratio-arrow {
+    font-size: 22px;
+    color: var(--border);
+  }
+  .ratio-label {
+    font-size: 11px;
+    color: #a78bfa;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ── BUTTON ROW ── */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  button {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--dim);
+    font-size: 13px;
+    padding: 9px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.3px;
+  }
+  button:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+  button.active {
+    background: var(--cyan);
+    border-color: var(--cyan);
+    color: #0b1120;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="title-block">
+  <div class="eyebrow">Chapter 11 · Lesson 2</div>
+  <h1>The <strong>Koch Snowflake</strong></h1>
+  <div class="subtitle">Each step: remove the middle third of every side → replace with two sides of a smaller triangle</div>
+</div>
+
+<div class="gallery" id="gallery"></div>
+
+<div class="arrow-row" id="arrowRow"></div>
+
+<div class="btn-row">
+  <button id="btnStats" onclick="toggleStats()">Show stats</button>
+  <button id="btnRatio" onclick="toggleRatio()">Show perimeter ratio</button>
+</div>
+
+<script>
+/* ── DATA ── */
+const ITERS = [
+  { depth: 0, sides: 3,   sideLen: '9 cm',   perim: '27 cm' },
+  { depth: 1, sides: 12,  sideLen: '3 cm',   perim: '36 cm' },
+  { depth: 2, sides: 48,  sideLen: '1 cm',   perim: '48 cm' },
+  { depth: 3, sides: 192, sideLen: '⅓ cm',   perim: '64 cm' },
+  { depth: 4, sides: 768, sideLen: '⅑ cm',   perim: '≈ 85.3 cm' },
+];
+
+/* Canvas sizes per iteration — grow substantially so fine detail stays visible */
+const SIZES = [160, 200, 260, 340, 420];
+
+/* ── KOCH DRAWING (matches Coastline Inquiry implementation) ── */
+function kochCurve(ctx, x1, y1, x2, y2, depth) {
+  if (depth === 0) { ctx.lineTo(x2, y2); return; }
+  const dx = x2 - x1, dy = y2 - y1;
+  const ex = x1 + dx / 3,  ey = y1 + dy / 3;
+  const fx = x1 + 2*dx/3,  fy = y1 + 2*dy/3;
+  // Bump peak: rotate vector ef by -60° (outward for CW traversal in screen coords)
+  const SIN60 = Math.sqrt(3) / 2;
+  const gx = ex + (dx/3) * 0.5 + (dy/3) * SIN60;
+  const gy = ey - (dx/3) * SIN60 + (dy/3) * 0.5;
+  kochCurve(ctx, x1, y1, ex, ey, depth - 1);
+  kochCurve(ctx, ex, ey, gx, gy, depth - 1);
+  kochCurve(ctx, gx, gy, fx, fy, depth - 1);
+  kochCurve(ctx, fx, fy, x2, y2, depth - 1);
+}
+
+function drawSnowflake(canvas, depth) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const cssSize = parseInt(canvas.dataset.cssSize);
+  canvas.width  = cssSize * dpr;
+  canvas.height = cssSize * dpr;
+  canvas.style.width  = cssSize + 'px';
+  canvas.style.height = cssSize + 'px';
+  ctx.scale(dpr, dpr);
+
+  const W = cssSize, H = cssSize;
+  ctx.clearRect(0, 0, W, H);
+
+  const R  = Math.min(W, H) * 0.40;
+  const cx = W / 2;
+  const cy = H / 2 + R * 0.08;
+
+  // Clockwise vertices (top → bottom-right → bottom-left) → bumps point outward
+  const v0 = [cx,              cy - R        ];
+  const v1 = [cx + R * 0.866,  cy + R * 0.5  ];
+  const v2 = [cx - R * 0.866,  cy + R * 0.5  ];
+
+  // Fill pass
+  ctx.beginPath();
+  ctx.moveTo(v0[0], v0[1]);
+  kochCurve(ctx, v0[0], v0[1], v1[0], v1[1], depth);
+  kochCurve(ctx, v1[0], v1[1], v2[0], v2[1], depth);
+  kochCurve(ctx, v2[0], v2[1], v0[0], v0[1], depth);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(56,189,248,0.10)';
+  ctx.fill();
+
+  // Stroke pass
+  ctx.beginPath();
+  ctx.moveTo(v0[0], v0[1]);
+  kochCurve(ctx, v0[0], v0[1], v1[0], v1[1], depth);
+  kochCurve(ctx, v1[0], v1[1], v2[0], v2[1], depth);
+  kochCurve(ctx, v2[0], v2[1], v0[0], v0[1], depth);
+  ctx.closePath();
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+/* ── BUILD DOM ── */
+function buildGallery() {
+  const gallery  = document.getElementById('gallery');
+  const arrowRow = document.getElementById('arrowRow');
+
+  ITERS.forEach((d, i) => {
+    /* Card */
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const size = SIZES[i];
+    const canvas = document.createElement('canvas');
+    canvas.dataset.cssSize = size;
+    drawSnowflake(canvas, d.depth);
+
+    const badge = document.createElement('div');
+    badge.className = 'iter-badge';
+    badge.innerHTML = `Iteration<span>${d.depth}</span>`;
+
+    const stats = document.createElement('div');
+    stats.className = 'stats';
+    stats.id = `stats-${i}`;
+    stats.innerHTML = `
+      <div class="stat-row">
+        <span class="stat-label">Sides</span>
+        <span class="stat-val">${d.sides}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Side length</span>
+        <span class="stat-val">${d.sideLen}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Perimeter</span>
+        <span class="stat-val perimeter">${d.perim}</span>
+      </div>`;
+
+    card.append(canvas, badge, stats);
+    gallery.appendChild(card);
+
+    /* Arrow between cards */
+    if (i < ITERS.length - 1) {
+      const ratio = document.createElement('div');
+      ratio.className = 'ratio-badge';
+      ratio.id = `ratio-${i}`;
+      ratio.innerHTML = `<div class="ratio-arrow">→</div><div class="ratio-label">× 4∕3</div>`;
+      arrowRow.appendChild(ratio);
+    }
+  });
+}
+
+/* ── TOGGLE CONTROLS ── */
+let statsVisible = false;
+let ratioVisible = false;
+
+function toggleStats() {
+  statsVisible = !statsVisible;
+  ITERS.forEach((_, i) => {
+    document.getElementById(`stats-${i}`).classList.toggle('visible', statsVisible);
+  });
+  const btn = document.getElementById('btnStats');
+  btn.textContent = statsVisible ? 'Hide stats' : 'Show stats';
+  btn.classList.toggle('active', statsVisible);
+}
+
+function toggleRatio() {
+  ratioVisible = !ratioVisible;
+  for (let i = 0; i < ITERS.length - 1; i++) {
+    document.getElementById(`ratio-${i}`).classList.toggle('visible', ratioVisible);
+  }
+  const btn = document.getElementById('btnRatio');
+  btn.textContent = ratioVisible ? 'Hide perimeter ratio' : 'Show perimeter ratio';
+  btn.classList.toggle('active', ratioVisible);
+}
+
+buildGallery();
+</script>
+</body>
+</html>
