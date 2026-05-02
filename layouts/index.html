@@ -1,0 +1,59 @@
+{{ partial "header.html" . }}
+
+<main class="home-shell" role="main">
+  <section class="home-hero" aria-labelledby="home-title">
+    <div class="home-intro">
+      <p class="eyebrow">Mathematics education, curriculum, and learning tools</p>
+      <h1 id="home-title">Yuchen Qiu / 裘渝琛</h1>
+      <p class="home-deck">I write about teaching, learning, cognition, and the practical craft of designing better mathematics classrooms.</p>
+      <div class="home-actions" aria-label="Primary links">
+        <a class="button-primary" href="{{ "/en/posts/" | relURL }}">Read Writing</a>
+        <a class="button-secondary" href="{{ "/teaching-resources/" | relURL }}">Teaching Resources</a>
+      </div>
+    </div>
+    <figure class="home-portrait">
+      <img src="{{ "/media/yuchen-seaside.jpeg" | relURL }}" width="1396" height="2250" alt="Yuchen Qiu standing by the sea">
+      <figcaption>By the sea</figcaption>
+    </figure>
+  </section>
+
+  <section class="home-section" aria-labelledby="current-focus">
+    <h2 id="current-focus">Current Focus</h2>
+    <div class="focus-grid">
+      <article>
+        <h3>Inquiry-Based Math</h3>
+        <p>Tasks, representations, and classroom structures that help students think before procedures harden.</p>
+      </article>
+      <article>
+        <h3>AI-Assisted Teaching</h3>
+        <p>Using AI as a planning partner for explanations, diagnostic questions, and curriculum design.</p>
+      </article>
+      <article>
+        <h3>Learning and Cognition</h3>
+        <p>Reading across psychology, neuroscience, and education to build practical models of learning.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="home-section split-section" aria-labelledby="latest-writing">
+    <div>
+      <h2 id="latest-writing">Latest Writing</h2>
+      <div class="writing-list">
+        {{ range first 4 (where .Site.RegularPages "Section" "en") }}
+          <article class="writing-item">
+            <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+            <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+            <p>{{ .Plain | truncate 150 }}</p>
+          </article>
+        {{ end }}
+      </div>
+    </div>
+    <aside class="resource-callout" aria-labelledby="resources-title">
+      <h2 id="resources-title">Teaching Resources</h2>
+      <p>Interactive classroom tools and mathematical explorations for teachers.</p>
+      <a href="{{ "/teaching-resources/" | relURL }}">Open resources</a>
+    </aside>
+  </section>
+</main>
+
+{{ partial "footer.html" . }}

@@ -1,6 +1,7 @@
 {{ if .Site.Params.favicon }}
   <link rel="icon" href="{{ .Site.Params.favicon | absURL }}">
 {{ end }}
+<link rel="stylesheet" href="{{ "/css/site-refresh.css" | relURL }}" />
 
 {{ if .Site.Params.enableVega }}
   <script src="https://cdn.jsdelivr.net/npm/vega@5.17.0"></script>

@@ -1,0 +1,20 @@
+<nav class="nav site-nav" aria-label="Primary navigation">
+  <a href="{{ "/" | relURL }}" class="nav-logo site-mark" aria-label="{{ .Site.Title }}">
+    <img src="{{ print "" .Site.Params.logo.url | relURL }}"
+      width="{{ .Site.Params.logo.width }}"
+      height="{{ .Site.Params.logo.height }}"
+      alt="{{ .Site.Params.logo.alt }}">
+    <span>Yuchen Qiu</span>
+  </a>
+
+  <ul class="nav-links">
+    {{ $menu := .Site.Menus.en }}
+    {{ if eq .Section "cn" }}
+      {{ $menu = .Site.Menus.cn }}
+    {{ end }}
+    {{ range $menu }}
+      {{ $active := or ($.IsMenuCurrent "en" .) ($.HasMenuCurrent "en" .) ($.IsMenuCurrent "cn" .) ($.HasMenuCurrent "cn" .) }}
+      <li><a href="{{ .URL | relURL }}"{{ if $active }} aria-current="page"{{ end }}>{{ .Name }}</a></li>
+    {{ end }}
+  </ul>
+</nav>

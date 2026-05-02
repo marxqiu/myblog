@@ -24,9 +24,13 @@ posts = "/posts/:year/:month/:day/:slug/"
     url = "/teaching-resources/"
     weight = 4
 [[menu.en]]
+    name = "About"
+    url = "/about/"
+    weight = 5
+[[menu.en]]
     name = "中文"
     url = "/cn/posts/"
-    weight = 5
+    weight = 6
 [[menu.cn]]
     name = "日志"
     url = "/cn/posts/"
@@ -36,9 +40,13 @@ posts = "/posts/:year/:month/:day/:slug/"
     url = "/teaching-resources/"
     weight = 3
 [[menu.cn]]
+    name = "关于"
+    url = "/about/"
+    weight = 4
+[[menu.cn]]
     name = "English"
     url = "/"
-    weight = 4
+    weight = 5
 
 [params]
     description = "Personal website of Yuchen Qiu"
@@ -50,7 +58,7 @@ posts = "/posts/:year/:month/:day/:slug/"
     enableComments = false
     enableMathJax = false
     enableVega = false
-    favicon = "media/hugo-logo.png"
+    favicon = "media/yq-mark.svg"
     # Edit by yourself:
     GithubEdit = "https://github.com/marxqiu/myblog/edit/main/content/"
     copyright = "&copy;"
@@ -62,10 +70,10 @@ posts = "/posts/:year/:month/:day/:slug/"
 
 [params.logo]
   # Change the logo picture as your prefer:
-  url = "media/hugo-logo.png" # you can change it
+  url = "media/yq-mark.svg" # you can change it
   width = 50.0
   height = 50.0
-  alt = "Hugo-ht"
+  alt = "Yuchen Qiu"
 
 [params.lang]
 

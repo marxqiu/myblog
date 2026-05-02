@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Yuchen Qiu mark</title>
+  <desc id="desc">A simple monogram mark with the letters YQ.</desc>
+  <rect width="64" height="64" rx="14" fill="#176b5b"/>
+  <path d="M18 18h7.2l7.1 12.4L39.4 18h6.8L35.5 35.4V46h-6.3V35.5L18 18Z" fill="#f8faf9"/>
+  <path d="M41.2 42.4 47 48.2l-4.2 4.1-5.7-5.8a14.6 14.6 0 0 1-5.1.9c-8.1 0-14.2-6.1-14.2-14.2 0-8 6.1-14.1 14.2-14.1 8 0 14.1 6.1 14.1 14.1 0 3.5-1.2 6.7-3.4 9.2h-1.5Zm-9.2-.7c4.6 0 8-3.6 8-8.5s-3.4-8.4-8-8.4c-4.7 0-8.1 3.5-8.1 8.4s3.4 8.5 8.1 8.5Z" fill="#f8faf9" opacity=".22"/>
+</svg>

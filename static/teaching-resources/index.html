@@ -6,123 +6,214 @@
   <title>Teaching Resources</title>
   <style>
     :root {
-      color-scheme: light;
-      --ink: #20242a;
-      --muted: #5b6470;
-      --line: #d9dee7;
-      --surface: #f7f8fb;
-      --accent: #1267d8;
+      --page: #f8faf9;
+      --surface: #ffffff;
+      --surface-soft: #eef4f1;
+      --ink: #1f2725;
+      --muted: #65716d;
+      --line: #d8e1dd;
+      --accent: #176b5b;
+      --accent-strong: #0f4b42;
+      --warm: #8a4b36;
     }
 
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", sans-serif;
       color: var(--ink);
-      background: #ffffff;
+      background: var(--page);
       line-height: 1.5;
     }
 
-    main {
-      width: min(960px, calc(100% - 32px));
+    a:focus-visible {
+      outline: 3px solid rgba(23, 107, 91, 0.3);
+      outline-offset: 3px;
+    }
+
+    .topbar {
+      border-bottom: 1px solid var(--line);
+      background: rgba(248, 250, 249, 0.94);
+    }
+
+    .topbar-inner {
+      width: min(1120px, calc(100% - 36px));
+      min-height: 72px;
       margin: 0 auto;
-      padding: 48px 0 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      color: var(--ink);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .topbar nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 14px;
+    }
+
+    .topbar nav a {
+      color: var(--muted);
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .topbar nav a:hover {
+      color: var(--ink);
+    }
+
+    main {
+      width: min(1120px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 56px 0 80px;
     }
 
     header {
-      border-bottom: 1px solid var(--line);
-      margin-bottom: 28px;
-      padding-bottom: 20px;
+      max-width: 760px;
+      margin-bottom: 34px;
+    }
+
+    .eyebrow {
+      color: var(--warm);
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 14px;
+      text-transform: uppercase;
     }
 
     h1 {
-      margin: 0 0 8px;
-      font-size: 2rem;
-      line-height: 1.15;
+      margin: 0 0 14px;
+      font-size: clamp(38px, 6vw, 64px);
+      line-height: 1.04;
     }
 
     p {
       margin: 0;
       color: var(--muted);
+      font-size: 18px;
       max-width: 68ch;
     }
 
     section {
-      margin-top: 28px;
+      border-top: 1px solid var(--line);
+      margin-top: 34px;
+      padding-top: 26px;
     }
 
     h2 {
-      margin: 0 0 12px;
-      font-size: 1.1rem;
+      margin: 0 0 14px;
+      font-size: 21px;
+      line-height: 1.25;
     }
 
     ul {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 10px;
+      gap: 12px;
       list-style: none;
       margin: 0;
       padding: 0;
     }
 
-    a {
-      display: block;
+    .resource-link {
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 12px 14px;
-      color: var(--accent);
+      padding: 14px 16px;
+      color: var(--ink);
       background: var(--surface);
       text-decoration: none;
     }
 
-    a:hover,
-    a:focus {
-      border-color: var(--accent);
-      background: #ffffff;
-      outline: none;
+    .resource-link:hover {
+      border-color: rgba(23, 107, 91, 0.55);
+      background: var(--surface-soft);
+    }
+
+    .resource-link span {
+      color: var(--muted);
+      display: block;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    @media (max-width: 700px) {
+      .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 18px 0;
+      }
+
+      main {
+        padding-top: 42px;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/">Yuchen Qiu</a>
+      <nav aria-label="Primary navigation">
+        <a href="/">Home</a>
+        <a href="/en/posts/">Writing</a>
+        <a href="/about/">About</a>
+      </nav>
+    </div>
+  </div>
+
   <main>
     <header>
+      <p class="eyebrow">Classroom tools</p>
       <h1>Teaching Resources</h1>
-      <p>Interactive math activities and classroom tools for teachers.</p>
+      <p>Interactive math activities and classroom tools for teachers. These resources are designed for projection, exploration, and discussion.</p>
     </header>
 
     <section>
       <h2>Lines, Angles, and Geometry</h2>
       <ul>
-        <li><a href="Chapter%208%20-%20Lines%20Relationship%20Explorer.html">Chapter 8 - Lines Relationship Explorer</a></li>
-        <li><a href="Chapter%209%20-%20Lesson%201%20circle-galli-game.html">Chapter 9 - Lesson 1 Circle Galli Game</a></li>
-        <li><a href="Chapter%209%20-%20Lesson%205%20Interactive.html">Chapter 9 - Lesson 5 Interactive</a></li>
-        <li><a href="Circle%20Theorems%20Demo.html">Circle Theorems Demo</a></li>
+        <li><a class="resource-link" href="Chapter%208%20-%20Lines%20Relationship%20Explorer.html">Lines Relationship Explorer<span>Geometry explorer</span></a></li>
+        <li><a class="resource-link" href="Chapter%209%20-%20Lesson%201%20circle-galli-game.html">Circle Galli Game<span>Interactive classroom game</span></a></li>
+        <li><a class="resource-link" href="Chapter%209%20-%20Lesson%205%20Interactive.html">Plane Geometry Interactive<span>Guided geometry activity</span></a></li>
+        <li><a class="resource-link" href="Circle%20Theorems%20Demo.html">Circle Theorems Demo<span>Teacher demonstration</span></a></li>
       </ul>
     </section>
 
     <section>
       <h2>Measurement and Inquiry</h2>
       <ul>
-        <li><a href="Chapter%2011%20-%20Lesson%201%20Launch%20Control.html">Chapter 11 - Lesson 1 Launch Control</a></li>
-        <li><a href="Chapter%2011%20-%20Lesson%202%20Koch%20Snowflake.html">Chapter 11 - Lesson 2 Koch Snowflake</a></li>
-        <li><a href="Chapter%2011%20-%20Lesson%203%20Archimedes%20Explorer.html">Chapter 11 - Lesson 3 Archimedes Explorer</a></li>
-        <li><a href="Chapter%2011%20-%20Lesson%203%20Rope%20Puzzle.html">Chapter 11 - Lesson 3 Rope Puzzle</a></li>
-        <li><a href="Chapter%2011%20-%20Lesson%204%20Area%20Units%20Explorer.html">Chapter 11 - Lesson 4 Area Units Explorer</a></li>
-        <li><a href="Chapter%2011%20-%20Lesson%207%20Pick's%20Rule%20Handout.html">Chapter 11 - Lesson 7 Pick's Rule Handout</a></li>
+        <li><a class="resource-link" href="Chapter%2011%20-%20Lesson%201%20Launch%20Control.html">Launch Control<span>Measurement challenge</span></a></li>
+        <li><a class="resource-link" href="Chapter%2011%20-%20Lesson%202%20Koch%20Snowflake.html">Koch Snowflake<span>Fractal measurement explorer</span></a></li>
+        <li><a class="resource-link" href="Chapter%2011%20-%20Lesson%203%20Archimedes%20Explorer.html">Archimedes Explorer<span>Area and approximation</span></a></li>
+        <li><a class="resource-link" href="Chapter%2011%20-%20Lesson%203%20Rope%20Puzzle.html">Rope Puzzle<span>Measurement reasoning task</span></a></li>
+        <li><a class="resource-link" href="Chapter%2011%20-%20Lesson%204%20Area%20Units%20Explorer.html">Area Units Explorer<span>Unit sense builder</span></a></li>
+        <li><a class="resource-link" href="Chapter%2011%20-%20Lesson%207%20Pick's%20Rule%20Handout.html">Pick's Rule Handout<span>Interactive handout</span></a></li>
       </ul>
     </section>
 
     <section>
       <h2>Three-Dimensional Thinking</h2>
       <ul>
-        <li><a href="Chapter%2012%20-%20Lesson%205%20Cross-Section%20Explorer.html">Chapter 12 - Lesson 5 Cross-Section Explorer</a></li>
-        <li><a href="Chapter%2012%20-%20Lesson%208%20Crow%20and%20Pebbles.html">Chapter 12 - Lesson 8 Crow and Pebbles</a></li>
+        <li><a class="resource-link" href="Chapter%2012%20-%20Lesson%205%20Cross-Section%20Explorer.html">Cross-Section Explorer<span>3D visualization</span></a></li>
+        <li><a class="resource-link" href="Chapter%2012%20-%20Lesson%208%20Crow%20and%20Pebbles.html">Crow and Pebbles<span>Volume and displacement</span></a></li>
       </ul>
     </section>
 
     <section>
-      <h2>Probability and Review</h2>
+      <h2>Probability</h2>
       <ul>
-        <li><a href="Chapter%2017%20-%20Lesson%201%20Hook.html">Chapter 17 - Lesson 1 Hook</a></li>
+        <li><a class="resource-link" href="Chapter%2017%20-%20Lesson%201%20Hook.html">Probability Hook<span>Introductory classroom activity</span></a></li>
       </ul>
     </section>
   </main>
